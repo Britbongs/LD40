@@ -24,12 +24,18 @@
     <ClCompile Include="src\GameStates\PlayState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\LogicUnits\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Game\Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\GameStates\PlayState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\LogicUnits\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

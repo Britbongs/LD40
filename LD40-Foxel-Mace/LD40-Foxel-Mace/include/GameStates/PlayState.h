@@ -19,7 +19,12 @@ public:
 
 private:
 
+	void registerLogicUnits();
+
 	KGameObject* mp_playerObj = nullptr;
+	const float PlayerMoveSpeed;
+	const Vec2f PlayerNormal;
+
 };
 
 #endif

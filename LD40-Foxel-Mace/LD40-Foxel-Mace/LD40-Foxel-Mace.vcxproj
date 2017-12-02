@@ -124,6 +124,7 @@
     <ClCompile Include="ld40.cpp" />
     <ClCompile Include="src\GameStates\PlayState.cpp" />
     <ClCompile Include="src\Game\Game.cpp" />
+    <ClCompile Include="src\LogicUnits\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
@@ -133,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="include\GameStates\PlayState.h" />
     <ClInclude Include="include\Game\Game.h" />
+    <ClInclude Include="include\LogicUnits\Camera.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
