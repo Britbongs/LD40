@@ -122,6 +122,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ld40.cpp" />
+    <ClCompile Include="src\LogicUnits\WorldCollisions.cpp" />
+    <ClCompile Include="src\Collisions\MeshCollider.cpp" />
     <ClCompile Include="src\GameStates\PlayState.cpp" />
     <ClCompile Include="src\Game\Game.cpp" />
     <ClCompile Include="src\LogicUnits\Camera.cpp" />
@@ -132,6 +134,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Collisions\MeshCollider.h" />
+    <ClInclude Include="include\LogicUnits\WorldCollisions.h" />
     <ClInclude Include="include\GameStates\PlayState.h" />
     <ClInclude Include="include\Game\Game.h" />
     <ClInclude Include="include\LogicUnits\Camera.h" />

@@ -16,10 +16,6 @@ int main(int argc, char argv[])
 	Game game;
 
 	KApplicationInitialise krawlerInitApplicationData(true);
-	//krawlerInitApplicationData.width = 1024;
-	//krawlerInitApplicationData.height = 768;
-	//krawlerInitApplicationData.windowTitle = KTEXT("LD40 - Alien Thing!");
-	//krawlerInitApplicationData.windowStyle = KWindowStyle::Windowed_Fixed_Size;
 
 	StartupEngine(&krawlerInitApplicationData);
 	game.registerGameStates();
