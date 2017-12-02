@@ -11,7 +11,6 @@ class Game
 public:
 
 	void registerGameStates();
-	void run();
 
 private:
 

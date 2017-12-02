@@ -10,8 +10,6 @@ Camera::Camera(Krawler::SLU::KStateLogicUnitAdministrator& rAdmin, KGameObject* 
 	setGameObject(pObj);
 }
 
-
-
 void Camera::tickUnit()
 {
 	sf::View view = KApplication::getApplicationInstance()->getRenderWindow()->getView();
