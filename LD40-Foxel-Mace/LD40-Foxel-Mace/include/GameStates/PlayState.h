@@ -19,6 +19,7 @@ public:
 
 private:
 
+	KGameObject* mp_playerObj = nullptr;
 };
 
 #endif
