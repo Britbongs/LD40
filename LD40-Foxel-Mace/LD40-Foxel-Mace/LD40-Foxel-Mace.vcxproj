@@ -22,6 +22,7 @@
     <ProjectGuid>{1DCE0B7E-4393-4F02-93F8-1697C4F67E3F}</ProjectGuid>
     <RootNamespace>LD40FoxelMace</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>LD40 - Alien Thing</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,7 +75,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Mace\Documents\GitHub\KRAWLER\KRAWLER\KRAWLER Engine\include;C:\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Mace\Documents\GitHub\KRAWLER\KRAWLER\KRAWLER Engine\include;C:\SFML-2.4.2\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -96,7 +97,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Mace\Documents\GitHub\KRAWLER\KRAWLER\KRAWLER Engine\include;C:\SFML-2.4.2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Mace\Documents\GitHub\KRAWLER\KRAWLER\KRAWLER Engine\include;C:\SFML-2.4.2\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -121,11 +122,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ld40.cpp" />
+    <ClCompile Include="src\GameStates\PlayState.cpp" />
+    <ClCompile Include="src\Game\Game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\KRAWLER\KRAWLER\KRAWLER Engine\KRAWLER Engine.vcxproj">
       <Project>{aec75c52-0449-4c9b-aff0-085ac57cbcd9}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\GameStates\PlayState.h" />
+    <ClInclude Include="include\Game\Game.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
