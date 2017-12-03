@@ -33,6 +33,10 @@ public:
 
 	sf::FloatRect getAABB() const { return m_aabb; }
 
+	std::wstring getGameObjectTag() const { return mp_obj->getObjectName(); }
+
+	void resolve(Vec2f mtv) ;
+
 private:
 
 	void InitialisePoints(const std::vector<Vec2f>& VertArray);

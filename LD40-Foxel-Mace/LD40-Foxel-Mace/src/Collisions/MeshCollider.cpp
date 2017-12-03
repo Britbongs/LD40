@@ -65,6 +65,12 @@ void MeshCollider::SetPointsList(const std::vector<Vec2f>& VertArray)
 
 // Private Functions 
 
+void MeshCollider::resolve(Vec2f mtv)
+{
+	mp_obj->move(mtv);
+	UpdatMeshCollider();
+}
+
 void MeshCollider::InitialisePoints(const std::vector<Vec2f>&  VertArray)
 {
 	assert((signed)VertArray.size() <= 4);

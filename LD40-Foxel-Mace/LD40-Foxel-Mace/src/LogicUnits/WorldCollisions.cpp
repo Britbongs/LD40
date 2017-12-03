@@ -12,7 +12,7 @@ WorldCollisions::~WorldCollisions()
 {
 }
 
-CollisionData WorldCollisions::CheckCollision(const MeshCollider& rMesh)
+CollisionData WorldCollisions::CheckCollision(MeshCollider& rMesh)
 {
 	CollisionData Data;
 	Data.bDidCollide = false;
@@ -21,11 +21,14 @@ CollisionData WorldCollisions::CheckCollision(const MeshCollider& rMesh)
 
 	if (m_collidersToCheck.size() != 0)
 	{
-		MeshCollisionCheck(rMesh);
+		Vec2f mtv;
+		MeshCollisionCheck(rMesh, mtv);
 
 		if (m_collidersToCheck.size() != 0)
 		{
 			Data.bDidCollide = true;
+			Data.collidedWithName = m_collidersToCheck[0]->getGameObjectTag();
+			Data.mtv = mtv;
 		}
 	}
 	return Data;
@@ -62,8 +65,8 @@ bool WorldCollisions::DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& 
 
 		if (m_collidersToCheck.size() != 0)
 		{
-
-			MeshCollisionCheck(m_raycastMesh);
+			Vec2f mtv;
+			MeshCollisionCheck(m_raycastMesh, mtv);
 
 			if (m_collidersToCheck.size() != 0)
 			{
@@ -75,7 +78,7 @@ bool WorldCollisions::DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& 
 	return false;
 }
 
-void WorldCollisions::MeshCollisionCheck(const MeshCollider& meshA)
+void WorldCollisions::MeshCollisionCheck(MeshCollider& meshA, Vec2f& mtv)
 {
 	//TODO catch multiple collision resolution 
 	//-----------------------------------------
@@ -85,42 +88,82 @@ void WorldCollisions::MeshCollisionCheck(const MeshCollider& meshA)
 	};
 	std::vector<MeshCollider*> TempColliderVector = m_collidersToCheck;
 	m_collidersToCheck.clear();
+	Vec2f smallestAxis;
+	double overlap = DBL_MAX;
 
 	Projection ProjectionA, ProjectionB;
-	for (auto ObjectB : TempColliderVector)
+	for (auto meshB : TempColliderVector)
 	{
-		bool EarlyOut = false;
+		if (&meshA == meshB)
+		{
+			return;
+		}
+		bool bEarlyOut = false;
 		int32 i = 0;
-		while (i < meshA.GetNormalListSize() && !EarlyOut)
+		while (i < meshA.GetNormalListSize() && !bEarlyOut)
 		{
 			ProjectionA = GetProjection(meshA, meshA.GetNormal(i));
-			ProjectionB = GetProjection((*ObjectB), meshA.GetNormal(i));
+			ProjectionB = GetProjection((*meshB), meshA.GetNormal(i));
+			if (ProjectionA == Projection(0.0, 0.0) && ProjectionB == Projection(0.0, 0.0))
+			{
+				++i;
+
+				continue;
+			}
 			if (!DoProjectionsOverlap(ProjectionA, ProjectionB))
 			{
-				EarlyOut = true;
+				bEarlyOut = true;
+			}
+			else
+			{
+				const double o = (ProjectionA.Max - ProjectionB.Max) + (ProjectionA.Min - ProjectionB.Min);
+				if (o < overlap)
+				{
+					smallestAxis = meshB->GetNormal(i);
+					overlap = o;
+				}
 			}
 			++i;
 		}
 
-		if (EarlyOut)
+		if (bEarlyOut)
 			continue;
 		i = 0;
 
-		while (i < meshA.GetNormalListSize() && !EarlyOut)
+		while (i < meshA.GetNormalListSize() && !bEarlyOut)
 		{
-			ProjectionA = GetProjection(meshA, ObjectB->GetNormal(i));
-			ProjectionB = GetProjection((*ObjectB), ObjectB->GetNormal(i));
+			ProjectionA = GetProjection(meshA, meshB->GetNormal(i));
+			ProjectionB = GetProjection((*meshB), meshB->GetNormal(i));
+			if (ProjectionA == Projection(0.0, 0.0) && ProjectionB == Projection(0.0, 0.0))
+			{
+				++i;
+
+				continue;
+			}
 			if (!DoProjectionsOverlap(ProjectionA, ProjectionB))
 			{
-				EarlyOut = true;
+				bEarlyOut = true;
+			}
+			else
+			{
+				const double o = (ProjectionA.Max - ProjectionB.Max) + (ProjectionA.Min - ProjectionB.Min);
+
+				if (o < overlap)
+				{
+					smallestAxis = meshB->GetNormal(i);
+					overlap = o;
+				}
 			}
 			++i;
 		}
 
-		if (EarlyOut)
+		if (bEarlyOut)
 			continue;
 
-		m_collidersToCheck.push_back(ObjectB);
+		m_collidersToCheck.push_back(meshB);
+		mtv = -smallestAxis * ((float)overlap / 10.0f);
+		meshA.resolve(-mtv);
+		meshB->resolve(mtv);
 	}
 
 	return;

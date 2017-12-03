@@ -10,6 +10,8 @@
 struct CollisionData
 {
 	bool bDidCollide = false;
+	std::wstring collidedWithName;
+	Vec2f mtv;
 };
 
 class WorldCollisions : public SLU::KStateLogicUnit
@@ -22,19 +24,35 @@ public:
 	virtual void tickUnit() override {};
 
 
-	CollisionData CheckCollision(const MeshCollider& Collider);
+	CollisionData CheckCollision(MeshCollider& Collider);
 	bool DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& startPos, const Vec2f& endPos, MeshCollider* pIgnoreMesh);
 private:
 	using AABB = sf::FloatRect;
 
 	struct Projection
 	{
-		double Max = 0.f;
-		double Min = 0.f;
+		double Max;
+		double Min;
+
+		Projection()
+			:Max(DBL_MAX), Min(DBL_MIN)
+		{
+
+		}
+		Projection(double max, double min)
+			: Max(max), Min(min)
+		{
+
+		}
+
+		bool operator ==(const Projection& rhs)
+		{
+			return Max == rhs.Max && Min == rhs.Min;
+		}
 	};
 
 	//TODO Implement sat collision here
-	void MeshCollisionCheck(const MeshCollider& SATColider);
+	void MeshCollisionCheck(MeshCollider& SATColider, Vec2f& mtv);
 
 	Projection GetProjection(const MeshCollider& Collider, const Vec2f& EdgeNormal) const;
 

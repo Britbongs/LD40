@@ -14,7 +14,7 @@ void Camera::tickUnit()
 {
 	sf::View view = KApplication::getApplicationInstance()->getRenderWindow()->getView();
 	auto obj = getGameObj();
-	view.setCenter(obj.getCentrePosition());
+	view.setCenter(obj->getCentrePosition());
 
 	const Vec2f centre = view.getCenter();
 	const Vec2f halfSize = view.getSize() * 0.5f;
