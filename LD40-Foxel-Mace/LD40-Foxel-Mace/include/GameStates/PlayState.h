@@ -8,7 +8,7 @@
 using namespace Krawler;
 using namespace Krawler::LogicState;
 
-#define MAX_AI_COUNT 100
+#define MAX_AI_COUNT 80
 #define AMOUNT_TO_SPAWN 5
 
 class PlayState : public KLogicState
@@ -24,7 +24,6 @@ public:
 
 private:
 
-	void handlePlayerControls();
 	void registerLogicUnits();
 
 	//AI related functionality
@@ -38,8 +37,9 @@ private:
 	KGameObject* mp_playerObj = nullptr;
 	KGameObject* mp_backgroundObj = nullptr;
 
+	MeshCollider* mp_playerMesh = nullptr;
+
 	const float PlayerMoveSpeed;
-	const Vec2f PlayerNormal;
 	const float MaxRaycastDistance;
 
 	std::vector<MeshCollider*> m_meshColliders;

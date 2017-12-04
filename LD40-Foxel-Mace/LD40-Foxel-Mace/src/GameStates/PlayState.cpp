@@ -8,6 +8,8 @@
 #include "LogicUnits\Camera.h"
 #include "LogicUnits\WorldCollisions.h"
 #include "LogicUnits\AIBehaviour.h"
+#include "LogicUnits\Animator.h"
+#include "LogicUnits\PlayerController.h"
 
 #include <Physics\KPhysicsScene.h>
 
@@ -17,9 +19,10 @@ using namespace sf;
 #define TILE_SIZE 32
 #define MAP_WIDTH (TILE_SIZE * 30)
 #define MAP_HEIGHT (TILE_SIZE * 20)
+#define CHARACTER_SIZE 48.0f
 
 PlayState::PlayState()
-	: PlayerNormal(1.0f, 0.f), PlayerMoveSpeed(250.0f), MaxRaycastDistance(350)
+	: PlayerMoveSpeed(250.0f), MaxRaycastDistance(350)
 {
 
 }
@@ -34,25 +37,22 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 	auto rAssetLoader = KAssetLoader::getAssetLoader();
 	rAssetLoader.setRootFolder(KTEXT("res/"));
 
-	auto pPlayer = addGameObject(Vec2f(64, 64));
-	pPlayer->setFillColour(sf::Color::Red);
+	auto pPlayer = addGameObject(Vec2f(CHARACTER_SIZE, CHARACTER_SIZE));
 	pPlayer->setOrigin(pPlayer->getHalfLocalBounds());
 	pPlayer->setPosition(Vec2f(100, 100));
+	pPlayer->setName(KTEXT("player"));
+
 	mp_playerObj = pPlayer;
 
-	auto pEntity = addGameObject(Vec2f(64, 64));
-	pEntity->setFillColour(sf::Color::Blue);
-	pEntity->setOrigin(pPlayer->getHalfLocalBounds());
-	pEntity->setPosition(Vec2f(300, 100));
 
 	std::vector<Vec2f> points(4);
 	points[0] = Vec2f(0.0f, 0.0f);
-	points[1] = Vec2f(64.0f, 0.0f);
-	points[2] = Vec2f(64.0f, 64.0f);
-	points[3] = Vec2f(0.0f, 64.0f);
+	points[1] = Vec2f(CHARACTER_SIZE, 0.0f);
+	points[2] = Vec2f(CHARACTER_SIZE, CHARACTER_SIZE);
+	points[3] = Vec2f(0.0f, CHARACTER_SIZE);
 
-	m_meshColliders.push_back(new MeshCollider(points, pPlayer));
-	m_meshColliders.push_back(new MeshCollider(points, pEntity));
+	mp_playerMesh = new MeshCollider(points, pPlayer);
+	m_meshColliders.push_back(mp_playerMesh);
 
 	m_tiledMap.setTexture(KTEXT("res/bg.png"));
 	int* map = new int[MAP_WIDTH * MAP_HEIGHT];
@@ -85,8 +85,8 @@ void PlayState::cleanupState()
 		KFREE(meshCol);
 	}
 	m_meshColliders.clear();
-	mp_slAdmin->cleanupAllUnits();
 	m_tiledMap.cleanupTiledMap();
+	KLogicState::cleanupState();
 }
 
 void PlayState::fixedTick()
@@ -96,83 +96,23 @@ void PlayState::fixedTick()
 
 void PlayState::tick()
 {
-	if (KInput::JustPressed(KKey::Escape))
+	for (auto& pMesh : m_meshColliders)
 	{
-		KApplication::getApplicationInstance()->closeApplication();
+		pMesh->UpdateMeshCollider();
 	}
-
-	for (auto& mesh : m_meshColliders)
-	{
-		mesh->UpdatMeshCollider();
-	}
-
-
-	mp_slAdmin->tickAllUnits();
-	handlePlayerControls();
+	KLogicState::tick();
 	handleAI();
-}
-
-void PlayState::handlePlayerControls()
-{
-	auto collider = mp_slAdmin->getStateLogicUnit<WorldCollisions>(KTEXT("WorldCollisions"));
-
-	if (collider->CheckCollision(*m_meshColliders[0]).bDidCollide)
-	{
-		mp_playerObj->setFillColour(Color::Cyan);
-	}
-	else
-	{
-		mp_playerObj->setFillColour(Color::Red);
-	}
-
-	{//rotation and shooting
-		float rotAngle = 0.0f;
-		const Vec2f mousePos = KInput::GetMouseWorldPosition();
-		const Vec2f playerCentre = mp_playerObj->getCentrePosition();
-
-		float angle = atan2(mousePos.y - playerCentre.y, mousePos.x - playerCentre.x);
-		if (KInput::MouseJustPressed(Mouse::Left))
-		{
-			const Vec2f dir(cosf(angle), sinf(angle));
-			const Vec2f size(16.0f, 16.0f);
-			const bool didHit = collider->DidOBBRaycastHit(size, Maths::Degrees(angle), mp_playerObj->getCentrePosition(), mp_playerObj->getCentrePosition() + (dir * MaxRaycastDistance), m_meshColliders[0]);
-			//KPrintf(KTEXT("Did hit = %s\n"), didHit ? KTEXT("true") : KTEXT("false"));
-		}
-
-		mp_playerObj->setRotation(Maths::Degrees(angle));
-	}
-	Vec2f movDir;
-
-	if (KInput::Pressed(KKey::A))
-	{
-		movDir.x = -1.0f;
-	}
-
-	if (KInput::Pressed(KKey::D))
-	{
-		movDir.x = 1.0f;
-	}
-
-	if (KInput::Pressed(KKey::W))
-	{
-		movDir.y = -1.0f;
-	}
-
-	if (KInput::Pressed(KKey::S))
-	{
-		movDir.y = 1.0f;
-	}
-
-
-	float deltaTime = KApplication::getApplicationInstance()->getDeltaTime();
-	mp_playerObj->move(Normalise(movDir) * PlayerMoveSpeed * deltaTime);
+	if (KInput::JustPressed(KKey::Escape))
+		KApplication::getApplicationInstance()->closeApplication();
 }
 
 void PlayState::registerLogicUnits()
 {
-
 	mp_slAdmin->addUnit(new Camera(*mp_slAdmin, mp_playerObj, Vec2f(MAP_WIDTH, MAP_HEIGHT) * 2.0f));
 	mp_slAdmin->addUnit(new WorldCollisions(m_meshColliders, *mp_slAdmin));
+	mp_slAdmin->addUnit(new PlayerController(mp_playerObj, *mp_slAdmin));
+
+	mp_slAdmin->getStateLogicUnit<PlayerController>()->setMeshCollider(mp_playerMesh);
 
 	for (int32 i = 0; i < MAX_AI_COUNT; ++i)
 	{
@@ -195,9 +135,9 @@ void PlayState::setupAI()
 	std::vector<Vec2f>meshColliderVertices(4);
 
 	meshColliderVertices[0] = Vec2f(0.0f, 0.0f);
-	meshColliderVertices[1] = Vec2f(32.0f, 0.0f);
-	meshColliderVertices[2] = Vec2f(32.0f, 32.0f);
-	meshColliderVertices[3] = Vec2f(0.0f, 32.0f);
+	meshColliderVertices[1] = Vec2f(CHARACTER_SIZE, 0.0f);
+	meshColliderVertices[2] = Vec2f(CHARACTER_SIZE, CHARACTER_SIZE);
+	meshColliderVertices[3] = Vec2f(0.0f, CHARACTER_SIZE);
 
 	int32 idx = 0;
 	const int32 originalSizeObjectList = (signed)m_gameObjects.size();
@@ -207,8 +147,7 @@ void PlayState::setupAI()
 
 	for (auto& pObj : vecAIPtrs)
 	{
-		pObj = addGameObject(Vec2f(32.0f, 32.0f), true);
-		pObj->setFillColour(sf::Color(84, 47, 163));
+		pObj = addGameObject(Vec2f(CHARACTER_SIZE, CHARACTER_SIZE), true);
 		pObj->setName(KTEXT("AI-") + GenerateUUID());
 		pObj->setObjectInactive();
 

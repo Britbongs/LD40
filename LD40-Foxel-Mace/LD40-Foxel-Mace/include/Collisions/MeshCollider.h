@@ -19,7 +19,7 @@ public:
 
 	~MeshCollider();
 
-	void UpdatMeshCollider();
+	void UpdateMeshCollider();
 
 	Vec2f GetNormal(int32 Index) const;
 
@@ -35,7 +35,9 @@ public:
 
 	std::wstring getGameObjectTag() const { return mp_obj->getObjectName(); }
 
-	void resolve(Vec2f mtv) ;
+	void resolve(Vec2f mtv);
+
+	bool isGameObjectActive() const { return mp_obj->isGameObjectActive(); }
 
 private:
 

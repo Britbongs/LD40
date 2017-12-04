@@ -1,4 +1,5 @@
 #include "Collisions/MeshCollider.h"
+#include "KApplication.h"
 
 using namespace sf;
 
@@ -21,7 +22,7 @@ MeshCollider::~MeshCollider()
 	m_localPoints.clear();
 }
 
-void MeshCollider::UpdatMeshCollider()
+void MeshCollider::UpdateMeshCollider()
 {
 	//Update the transformed points list
 	UpdateTransformedPoints(mp_obj->getTransform());
@@ -67,8 +68,9 @@ void MeshCollider::SetPointsList(const std::vector<Vec2f>& VertArray)
 
 void MeshCollider::resolve(Vec2f mtv)
 {
-	mp_obj->move(mtv);
-	UpdatMeshCollider();
+	float dt = KApplication::getApplicationInstance()->getDeltaTime();
+	mp_obj->move(mtv * dt);
+	UpdateMeshCollider();
 }
 
 void MeshCollider::InitialisePoints(const std::vector<Vec2f>&  VertArray)

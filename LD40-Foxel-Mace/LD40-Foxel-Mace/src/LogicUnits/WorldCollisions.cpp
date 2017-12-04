@@ -35,8 +35,9 @@ CollisionData WorldCollisions::CheckCollision(MeshCollider& rMesh)
 }
 
 //Refactor to take data structure
-bool WorldCollisions::DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& startPos, const Vec2f& endPos, MeshCollider* pIgnoreMesh)
+CollisionData WorldCollisions::DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& startPos, const Vec2f& endPos, MeshCollider* pIgnoreMesh)
 {
+	CollisionData data;
 	(*mp_RaycastObj) = KGameObject(size);
 
 	std::vector<Vec2f> points(4);
@@ -53,7 +54,7 @@ bool WorldCollisions::DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& 
 		const float t = (float)i / 100.0f;
 		Vec2f pos = Maths::Lerp(startPos, endPos, t);
 		mp_RaycastObj->setPosition(pos);
-		m_raycastMesh.UpdatMeshCollider();
+		m_raycastMesh.UpdateMeshCollider();
 
 		AABBCollisionCheck(m_raycastMesh);
 		auto findPos = std::find(m_collidersToCheck.begin(), m_collidersToCheck.end(), pIgnoreMesh);
@@ -70,12 +71,16 @@ bool WorldCollisions::DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& 
 
 			if (m_collidersToCheck.size() != 0)
 			{
-				return true;
+				data.bDidCollide = true;
+				data.collidedWithName = m_collidersToCheck[0]->getGameObjectTag();
+				break;
 			}
 		}
 
 	}
-	return false;
+
+
+	return data;
 }
 
 void WorldCollisions::MeshCollisionCheck(MeshCollider& meshA, Vec2f& mtv)
@@ -161,7 +166,7 @@ void WorldCollisions::MeshCollisionCheck(MeshCollider& meshA, Vec2f& mtv)
 			continue;
 
 		m_collidersToCheck.push_back(meshB);
-		mtv = -smallestAxis * ((float)overlap / 10.0f);
+		mtv = -smallestAxis * ((float)overlap);
 		meshA.resolve(-mtv);
 		meshB->resolve(mtv);
 	}
@@ -191,6 +196,10 @@ void WorldCollisions::AABBCollisionCheck(const MeshCollider& rMesh)
 
 	for (auto o : m_allMeshColliders)
 	{
+		if (!o->isGameObjectActive())
+		{
+			continue;
+		}
 
 		if (o == &rMesh)
 		{//Same object, continue 

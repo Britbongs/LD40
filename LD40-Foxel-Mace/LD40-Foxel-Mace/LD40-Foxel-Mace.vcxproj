@@ -99,6 +99,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\Mace\Documents\GitHub\KRAWLER\KRAWLER\KRAWLER Engine\include;C:\SFML-2.4.2\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CallingConvention>Cdecl</CallingConvention>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -124,6 +125,7 @@
     <ClCompile Include="ld40.cpp" />
     <ClCompile Include="src\LogicUnits\AIBehaviour.cpp" />
     <ClCompile Include="src\LogicUnits\Animator.cpp" />
+    <ClCompile Include="src\LogicUnits\PlayerController.cpp" />
     <ClCompile Include="src\LogicUnits\WorldCollisions.cpp" />
     <ClCompile Include="src\Collisions\MeshCollider.cpp" />
     <ClCompile Include="src\GameStates\PlayState.cpp" />
@@ -139,6 +141,7 @@
     <ClInclude Include="include\Collisions\MeshCollider.h" />
     <ClInclude Include="include\LogicUnits\AIBehaviour.h" />
     <ClInclude Include="include\LogicUnits\Animator.h" />
+    <ClInclude Include="include\LogicUnits\PlayerController.h" />
     <ClInclude Include="include\LogicUnits\WorldCollisions.h" />
     <ClInclude Include="include\GameStates\PlayState.h" />
     <ClInclude Include="include\Game\Game.h" />

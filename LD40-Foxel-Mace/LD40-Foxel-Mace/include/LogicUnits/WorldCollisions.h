@@ -25,7 +25,7 @@ public:
 
 
 	CollisionData CheckCollision(MeshCollider& Collider);
-	bool DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& startPos, const Vec2f& endPos, MeshCollider* pIgnoreMesh);
+	CollisionData DidOBBRaycastHit(Vec2f size, float rotation, const Vec2f& startPos, const Vec2f& endPos, MeshCollider* pIgnoreMesh);
 private:
 	using AABB = sf::FloatRect;
 
