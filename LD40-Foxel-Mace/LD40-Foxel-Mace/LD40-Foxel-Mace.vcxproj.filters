@@ -42,6 +42,9 @@
     <ClCompile Include="src\LogicUnits\PlayerController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\GameStates\WinState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Game\Game.h">
@@ -68,5 +71,11 @@
     <ClInclude Include="include\LogicUnits\PlayerController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\GameStates\WinState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="kconfig.cfg" />
   </ItemGroup>
 </Project>

@@ -20,7 +20,7 @@ public:
 	virtual KInitStatus setupState(const KLogicStateInitialiser&  initaliser) override;
 	virtual void cleanupState() override;
 	virtual void fixedTick() override;
-	virtual void tick() override;
+	virtual void tick() override; 
 
 private:
 
@@ -47,7 +47,10 @@ private:
 	int32 m_firstAiIdx = -1;
 	int32 m_firstAIMeshIdx = -1;
 
+	bool m_bGameOver = 0.0f;
+
 	float m_aiTimer = 0.0f;
+
 };
 
 #endif

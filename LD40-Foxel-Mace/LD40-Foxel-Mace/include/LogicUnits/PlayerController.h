@@ -15,7 +15,9 @@ enum PlayerState
 {
 	StateIdle,
 	StateRunning,
-	StateAiming
+	StateAiming,
+	StateDying,
+	StateDead
 };
 
 using namespace Krawler;
@@ -31,6 +33,8 @@ public:
 	virtual void cleanupUnit() override;
 	virtual void tickUnit() override;
 	void setMeshCollider(MeshCollider* const pMesh);
+	void takeDamage();
+	bool isPlayerAlive() const { return m_playerHealth > 0; }
 
 private:
 
@@ -38,14 +42,13 @@ private:
 	Vec2f getMoveDir();
 	void updateAiming();
 	void fireProjectile(float angle);
+	void updatePlayerUI();
 
 	bool loadAnimations();
-	bool loadSounds(); 
+	bool loadSounds();
 
 	void checkForStateChange(const Vec2f& movVec);
 	void changeState(PlayerState nextState);
-	void tickAiming();
-
 
 	const float PlayerMoveSpeed;
 	const float MaxRaycastDistance;
@@ -55,8 +58,10 @@ private:
 	Animator* mp_RunAnimator = nullptr;
 	Animator* mp_IdleAnimator = nullptr;
 	Animator* mp_AimAnimator = nullptr;
+	Animator* mp_DieAnimator = nullptr;
 
-	sf::Sound* m_footStepSound;
+	sf::Sound* mp_footStepSound;
+	sf::Sound* mp_railgunSound;
 
 	bool m_bIsMoving = false;
 	bool m_bIsAiming = false;
@@ -66,6 +71,9 @@ private:
 	float m_minimumAimTimer = 0.0f;
 
 	PlayerState m_playerState = PlayerState::StateIdle;
+
+	int32 m_playerHealth = 3;
+	int32 m_uiIndex = 0;
 };
 
 

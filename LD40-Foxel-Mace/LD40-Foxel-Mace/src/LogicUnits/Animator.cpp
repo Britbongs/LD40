@@ -68,13 +68,14 @@ void Animator::tickUnit()
 
 	if (m_timer > m_frameTime)
 	{
+		auto size = m_keyframes.size();
 		++m_currentFrame;
 		m_timer = fmod(m_timer, m_frameTime);
 
 		if (m_currentFrame >= m_keyframes.size())
 		{
 			m_currentFrame = 0;
-			if (m_bIsLooping = false)
+			if (m_bIsLooping == false)
 			{
 				m_bIsPlaying = false;
 			}

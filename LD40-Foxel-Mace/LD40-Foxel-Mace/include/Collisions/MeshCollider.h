@@ -39,6 +39,10 @@ public:
 
 	bool isGameObjectActive() const { return mp_obj->isGameObjectActive(); }
 
+	Vec2f getCentrePos() const { return mp_obj->getCentrePosition(); }
+
+	bool isMeshActive() const { return mp_obj->isGameObjectActive(); }
+
 private:
 
 	void InitialisePoints(const std::vector<Vec2f>& VertArray);
@@ -62,7 +66,6 @@ private:
 	sf::FloatRect m_aabb;
 
 	KGameObject* mp_obj;
-
 };
 
 #endif

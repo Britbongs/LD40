@@ -123,6 +123,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ld40.cpp" />
+    <ClCompile Include="src\GameStates\WinState.cpp" />
     <ClCompile Include="src\LogicUnits\AIBehaviour.cpp" />
     <ClCompile Include="src\LogicUnits\Animator.cpp" />
     <ClCompile Include="src\LogicUnits\PlayerController.cpp" />
@@ -139,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Collisions\MeshCollider.h" />
+    <ClInclude Include="include\GameStates\WinState.h" />
     <ClInclude Include="include\LogicUnits\AIBehaviour.h" />
     <ClInclude Include="include\LogicUnits\Animator.h" />
     <ClInclude Include="include\LogicUnits\PlayerController.h" />
@@ -146,6 +148,9 @@
     <ClInclude Include="include\GameStates\PlayState.h" />
     <ClInclude Include="include\Game\Game.h" />
     <ClInclude Include="include\LogicUnits\Camera.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="kconfig.cfg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

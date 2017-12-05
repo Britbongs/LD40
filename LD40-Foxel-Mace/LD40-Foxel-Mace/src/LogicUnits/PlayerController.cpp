@@ -5,6 +5,8 @@
 
 #include <SFML\Audio.hpp>
 
+#include "LogicUnits\AIBehaviour.h"
+
 using namespace Krawler::SLU;
 using namespace Krawler::Maths;
 using namespace Krawler::Input;
@@ -13,7 +15,7 @@ using namespace Krawler::Input;
 
 PlayerController::PlayerController(KGameObject * pObj, SLU::KStateLogicUnitAdministrator & rAdmin)
 	:SLU::KGameObjectLogicUnit(CLASS_NAME_TO_TAG(PlayerController), rAdmin),
-	PlayerMoveSpeed(250.0f), MaxRaycastDistance(180)
+	PlayerMoveSpeed(250.0f), MaxRaycastDistance(500)
 {
 	setGameObject(pObj);
 }
@@ -33,12 +35,22 @@ KInitStatus PlayerController::initialiseUnit()
 	if (!result)
 		return KInitStatus::MissingResource;
 
+	getGameObj()->setRenderLayer(5);
+
+
+	auto asset = KAssetLoader::getAssetLoader();
+	sf::Font* const pFont = asset.loadFont(KTEXT("res\\seriphim.ttf"));
+	sf::Text pText = sf::Text(KTEXT("HP: "), *pFont);
+	pText.setCharacterSize(32);
+	m_uiIndex = KApplication::getApplicationInstance()->getRenderer()->addTextToScreen(pText, Vec2i(10, 10));
+
 	return KInitStatus::Success;
 }
 
 void PlayerController::cleanupUnit()
 {
-	KFREE(m_footStepSound);
+	KFREE(mp_footStepSound);
+	KFREE(mp_railgunSound);
 }
 
 void PlayerController::tickUnit()
@@ -78,10 +90,16 @@ void PlayerController::tickUnit()
 		go->setRotation(Maths::Degrees(angle) - 180.0f);
 
 	}
+	case PlayerState::StateDying:
+		if (!mp_DieAnimator->isAnimationPlaying())
+		{
+			changeState(PlayerState::StateDead);
+		}
 	default:
 	case PlayerState::StateIdle:
 		break;
 	}
+	updatePlayerUI();
 }
 
 void PlayerController::setMeshCollider(MeshCollider * const pMesh)
@@ -89,8 +107,22 @@ void PlayerController::setMeshCollider(MeshCollider * const pMesh)
 	mp_meshCollider = pMesh;
 }
 
+void PlayerController::takeDamage()
+{
+	if (m_playerHealth >= 0)
+		--m_playerHealth;
+	else
+	{
+		changeState(PlayerState::StateDying);
+	}
+	KPrintf(L"Player Health : %d\n", m_playerHealth);
+}
+
 Vec2f PlayerController::getMoveDir()
 {
+	if (m_playerState == PlayerState::StateDying || m_playerState == PlayerState::StateDead)
+		return Vec2f();
+
 	Vec2f movDir;
 
 	if (KInput::Pressed(KKey::A))
@@ -138,16 +170,22 @@ void PlayerController::fireProjectile(float angle)
 	const Vec2f size(16.0f, 16.0f);
 	CollisionData raycastResult = collider->DidOBBRaycastHit(size, angle, playerCentre, playerCentre + (dir * MaxRaycastDistance), mp_meshCollider);
 
+	mp_railgunSound->play();
+
 	if (raycastResult.bDidCollide)
 	{
-		auto playState = getStateAdmin()->getLogicState();
-		auto enemyObj = playState.getGameObjectByName(raycastResult.collidedWithName);
-		if (enemyObj)
-		{
-			enemyObj->setObjectInactive();
-		}
-	}
+		SLU::KGameObjectLogicUnit* aiScript = getStateAdmin()->getGameLogicUnitByGameObjectName(raycastResult.collidedWithName);
+		AIBehaviour* aiInstance = dynamic_cast<AIBehaviour*> (aiScript);
 
+		aiInstance->setState(AIState::Shot);
+
+	}
+}
+
+void PlayerController::updatePlayerUI()
+{
+	std::wstring str = KTEXT("HP: ") + std::to_wstring(m_playerHealth);
+	KApplication::getApplicationInstance()->getRenderer()->getTextByIndex(m_uiIndex).setString(str);
 }
 
 bool PlayerController::loadAnimations()
@@ -200,6 +238,26 @@ bool PlayerController::loadAnimations()
 
 		getStateAdmin()->addUnit(mp_AimAnimator);
 	}
+
+	{//Die anim
+		sf::Texture* pPlayerDieAnim = assetLoader.loadTexture(KTEXT("player_death.png"));
+
+		mp_DieAnimator = new Animator(pPlayerDieAnim, *getStateAdmin());
+
+		mp_DieAnimator->setGameObject(getGameObj());
+		mp_DieAnimator->setFrameTime(150.0f / 1000.0f);
+		mp_DieAnimator->setTileDimension(Vec2i(PLAYER_ANIM_SIZE, PLAYER_ANIM_SIZE));
+		mp_DieAnimator->addKeyFrame(sf::IntRect(0, 0, 1, 1));
+		mp_DieAnimator->addKeyFrame(sf::IntRect(1, 0, 1, 1));
+		mp_DieAnimator->addKeyFrame(sf::IntRect(2, 0, 1, 1));
+		mp_DieAnimator->addKeyFrame(sf::IntRect(3, 0, 1, 1));
+		mp_DieAnimator->addKeyFrame(sf::IntRect(4, 0, 1, 1));
+		mp_DieAnimator->addKeyFrame(sf::IntRect(5, 0, 1, 1));
+		mp_DieAnimator->setLooping(false);
+
+		getStateAdmin()->addUnit(mp_DieAnimator);
+	}
+
 	return true;
 }
 
@@ -207,19 +265,27 @@ bool PlayerController::loadSounds()
 {
 	auto assetLoader = KAssetLoader::getAssetLoader();
 	assetLoader.setRootFolder(KTEXT("res\\"));
-	sf::SoundBuffer* footstepBuffer = assetLoader.loadSoundBuffer(KTEXT("footstep.wav"));
+	sf::SoundBuffer* const footstepBuffer = assetLoader.loadSoundBuffer(KTEXT("footstep.ogg"));
 
 	if (!footstepBuffer)
 		return false;
 
-	m_footStepSound = new sf::Sound(*footstepBuffer);
-	m_footStepSound->setLoop(true);
-	m_footStepSound->setVolume(25);
+
+	sf::SoundBuffer* const railgunBuffer = assetLoader.loadSoundBuffer(KTEXT("railgun.ogg"));
+
+	mp_footStepSound = new sf::Sound(*footstepBuffer);
+	mp_footStepSound->setLoop(true);
+	mp_footStepSound->setVolume(25);
+	mp_footStepSound->play();
+
+	mp_railgunSound = new sf::Sound(*railgunBuffer);
+	mp_railgunSound->setLoop(false);
 	return true;
 }
 
 void PlayerController::checkForStateChange(const Vec2f & movVec)
 {
+
 	if (!m_bIsAiming)
 	{
 		if (movVec == Vec2f(0.0f, 0.0f))
@@ -236,7 +302,7 @@ void PlayerController::checkForStateChange(const Vec2f & movVec)
 			m_bIsMoving = true;
 			if (m_playerState != PlayerState::StateRunning)
 			{
-				if (m_footStepSound->getStatus() != sf::Sound::Playing)
+				if (mp_footStepSound->getStatus() != sf::Sound::Playing)
 				{
 				}
 				changeState(PlayerState::StateRunning);
@@ -282,6 +348,11 @@ void PlayerController::changeState(PlayerState nextState)
 		mp_AimAnimator->play();
 		mp_currentAnimator = mp_AimAnimator;
 		m_playerState = PlayerState::StateAiming;
+		break;
+	case PlayerState::StateDying:
+		mp_DieAnimator->setFrame(0, true);
+		mp_DieAnimator->play();
+		mp_currentAnimator = mp_AimAnimator;
 		break;
 	}
 }

@@ -3,6 +3,7 @@
 #include <AssetLoader\KAssetLoader.h>
 #include <Input\KInput.h>
 #include <KApplication.h>
+#include <LogicState\KLogicStateDirector.h>
 #include <Renderer\KRenderer.h>
 
 #include "LogicUnits\Camera.h"
@@ -73,8 +74,6 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 
 	mp_slAdmin->initAllUnits();
 
-	mp_physicsScene->setPercentageCorrection(0.8f);
-
 	return KInitStatus::Success;
 }
 
@@ -96,12 +95,27 @@ void PlayState::fixedTick()
 
 void PlayState::tick()
 {
+	KLogicState::tick();
+
 	for (auto& pMesh : m_meshColliders)
 	{
-		pMesh->UpdateMeshCollider();
+		if (pMesh->isMeshActive())
+			pMesh->UpdateMeshCollider();
 	}
-	KLogicState::tick();
+	//for (auto pMesh : m_meshColliders)
+	{
+		//mp_slAdmin->getStateLogicUnit<WorldCollisions>()->CheckCollision(*mp_playerMesh);
+	}
+
 	handleAI();
+
+	auto player = mp_slAdmin->getStateLogicUnit<PlayerController>();
+
+	if (!player->isPlayerAlive())
+	{
+		mp_stateDirector->setActiveLogicState(KTEXT("winstate"));
+	}
+
 	if (KInput::JustPressed(KKey::Escape))
 		KApplication::getApplicationInstance()->closeApplication();
 }
@@ -148,6 +162,8 @@ void PlayState::setupAI()
 	for (auto& pObj : vecAIPtrs)
 	{
 		pObj = addGameObject(Vec2f(CHARACTER_SIZE, CHARACTER_SIZE), true);
+
+		pObj->setOrigin(pObj->getHalfLocalBounds());
 		pObj->setName(KTEXT("AI-") + GenerateUUID());
 		pObj->setObjectInactive();
 
@@ -158,11 +174,24 @@ void PlayState::setupAI()
 
 void PlayState::handleAI()
 {
+	static float AISpawnTime = 10.0f;
 	if (m_aiTimer == 0.0f)
 	{
 		spawnAI();
 	}
+	if ((int(m_aiTimer)) > AISpawnTime)
+	{
+		spawnAI();
+		m_aiTimer = 0.0f;
+		AISpawnTime -= 1.0f;
+	}
 	m_aiTimer += KApplication::getApplicationInstance()->getDeltaTime();
+	if (AISpawnTime <= 0.0f)
+	{
+		m_bGameOver = true;
+		KPrintf(L"\n\n\nGame over!\n\n\n");
+	}
+
 }
 
 void PlayState::spawnAI()
@@ -196,7 +225,7 @@ void PlayState::spawnAI()
 		return (point.x >= minX) && (point.x < maxX) && (point.y >= minY) && (point.y < maxY);
 	};
 
-	KGameObject* pObjects[10];
+	KGameObject* pObjects[AMOUNT_TO_SPAWN];
 
 	sf::FloatRect viewBounds;
 	viewBounds.left = viewCentre.x - (screenSize.x / 2.0f);
@@ -207,6 +236,8 @@ void PlayState::spawnAI()
 	for (auto& pObj : pObjects)
 	{
 		pObj = getSpareAI(m_gameObjects);
+		if (!pObj)
+			continue;
 		pObj->setObjectActive();
 
 		Vec2f pos;
@@ -220,5 +251,7 @@ void PlayState::spawnAI()
 		//TODO stop enemies spawning slightly outside map
 
 		pObj->setPosition(pos);
+		auto aiSLU = dynamic_cast<AIBehaviour*>(mp_slAdmin->getGameLogicUnitByGameObjectName(pObj->getObjectName()));
+		aiSLU->setState(AIState::Run);
 	}
 }

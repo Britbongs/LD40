@@ -26,6 +26,7 @@ void MeshCollider::UpdateMeshCollider()
 {
 	//Update the transformed points list
 	UpdateTransformedPoints(mp_obj->getTransform());
+
 	//Update normal list
 	UpdateNormals();
 	m_aabb = mp_obj->getAlignedGlobalBounds();
@@ -33,7 +34,7 @@ void MeshCollider::UpdateMeshCollider()
 
 Vec2f MeshCollider::GetNormal(int32 Index) const
 {
-	if (Index > 0 && Index < (int32)m_normalList.size())
+	if (Index >= 0 && Index < (int32)m_normalList.size())
 	{
 		return m_normalList[Index];
 	}
@@ -69,7 +70,7 @@ void MeshCollider::SetPointsList(const std::vector<Vec2f>& VertArray)
 void MeshCollider::resolve(Vec2f mtv)
 {
 	float dt = KApplication::getApplicationInstance()->getDeltaTime();
-	mp_obj->move(mtv * dt);
+	mp_obj->move(mtv*dt);
 	UpdateMeshCollider();
 }
 
@@ -100,6 +101,7 @@ void MeshCollider::UpdateTransformedPoints(const Transform & ObjectTransform)
 {
 	for (int32 PointIndex = 0; PointIndex < (int32)m_localPoints.size(); ++PointIndex)
 	{//Update the transformed points array using the objects transform
+		auto playerPos = ObjectTransform.transformPoint(Vec2f(0.0f, 48.0f));
 		m_transformedPoints[PointIndex] = ObjectTransform.transformPoint(m_localPoints[PointIndex]);
 	}
 }
@@ -109,7 +111,7 @@ void MeshCollider::UpdateNormals()
 	//TODO move to maths utility
 	auto MakePerpendicular = [](const Normal& Edge)
 	{
-		return Normal(-Edge.y, Edge.x);
+		return Normal(Edge.y, -Edge.x);
 	};
 
 	for (Int32 PointIndex = 0; PointIndex < (Int32)m_transformedPoints.size(); ++PointIndex)

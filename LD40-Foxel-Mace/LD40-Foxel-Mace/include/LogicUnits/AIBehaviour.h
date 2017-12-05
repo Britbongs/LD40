@@ -12,8 +12,10 @@ using namespace Krawler;
 
 enum AIState
 {
-	StateRun,
-	StateAttack
+	Run,
+	Attack,
+	Shot,
+	Dead
 };
 
 class AIBehaviour : public SLU::KGameObjectLogicUnit
@@ -29,14 +31,17 @@ public:
 	void setPlayerPointer(KGameObject* pPlayerObj) { mp_playerObj = pPlayerObj; }
 	void setMeshCollider(MeshCollider* const pMesh);
 
+	void setState(AIState state);
 
 private:
 
-	void resetAIState();
+	const float AttackCooldownTime = sf::milliseconds(2000).asSeconds();
+	const float AIMoveSpeed;
 
+	void resetAIState();
+	Vec2f getAvoidanceVector(const Vec2f& directionVector);
 	bool loadAnimations();
 
-	const float AIMoveSpeed;
 	KGameObject* mp_playerObj;
 	MeshCollider* mp_meshCollider;
 
@@ -44,6 +49,11 @@ private:
 	Animator* mp_EnemyPunch = nullptr;
 	Animator* mp_EnemyDieAnimator = nullptr;
 	bool m_bWasJustAlive = false;
+
+	AIState m_aiState;
+
+	float m_attackCooldownTimer = 0.0f;
+	bool m_bAttackOnCooldown = false;
 };
 
 #endif 

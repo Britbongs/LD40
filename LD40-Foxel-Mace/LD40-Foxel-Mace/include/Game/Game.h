@@ -4,7 +4,6 @@
 #include <Krawler.h>
 #include <KApplication.h>
 #include <LogicState\KLogicStateDirector.h>
-#include "GameStates\PlayState.h"
 
 class Game
 {
