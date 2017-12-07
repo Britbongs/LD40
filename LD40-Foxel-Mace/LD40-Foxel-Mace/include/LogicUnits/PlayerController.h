@@ -32,13 +32,18 @@ public:
 	virtual KInitStatus initialiseUnit() override;
 	virtual void cleanupUnit() override;
 	virtual void tickUnit() override;
+
 	void setMeshCollider(MeshCollider* const pMesh);
 	void takeDamage();
-	bool isPlayerAlive() const { return m_playerHealth > 0; }
+	PlayerState getPlayerState() const { return m_playerState; }
+	int32 getAmountKilled() const { return m_amountKilled; }
 
 private:
 
+	bool isPlayerAlive() const { return m_playerHealth > 0; }
+
 	const float MinimumTimeAimeBeforeFire = 0.09f;
+
 	Vec2f getMoveDir();
 	void updateAiming();
 	void fireProjectile(float angle);
@@ -49,9 +54,12 @@ private:
 
 	void checkForStateChange(const Vec2f& movVec);
 	void changeState(PlayerState nextState);
+	void handlePlayerShootingMechanics(const Vec2f& movVec);
 
 	const float PlayerMoveSpeed;
 	const float MaxRaycastDistance;
+
+	const uint32 MaxPlayerHealth;
 
 	MeshCollider* mp_meshCollider = nullptr;
 
@@ -72,9 +80,9 @@ private:
 
 	PlayerState m_playerState = PlayerState::StateIdle;
 
-	int32 m_playerHealth = 3;
+	uint32 m_playerHealth;
 	int32 m_uiIndex = 0;
+	uint32 m_amountKilled = 0;
 };
-
 
 #endif 

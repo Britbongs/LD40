@@ -10,12 +10,12 @@ class WinState : public LogicState::KLogicState
 {
 public:
 
-	virtual Krawler::KInitStatus setupState(const LogicState::KLogicStateInitialiser&  initaliser)override;
+	virtual Krawler::KInitStatus setupState(const LogicState::KLogicStateInitialiser&  initialiser)override;
 	virtual void cleanupState() override;
 	virtual void tick()override;
 
 private:
-	sf::Text mp_winText;
+	sf::Text m_winText;
 	bool m_bHasStateTicked = false;
 
 };

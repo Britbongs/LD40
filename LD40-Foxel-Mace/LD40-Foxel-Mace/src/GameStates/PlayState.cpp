@@ -23,7 +23,7 @@ using namespace sf;
 #define CHARACTER_SIZE 48.0f
 
 PlayState::PlayState()
-	: PlayerMoveSpeed(250.0f), MaxRaycastDistance(350)
+	: m_amountToSpawn(MIN_SPAWN_COUNT)
 {
 
 }
@@ -73,7 +73,12 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 	registerLogicUnits();
 
 	mp_slAdmin->initAllUnits();
-
+	sf::Text m_toKillText;
+	m_toKillText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("res\\seriphim.ttf")));
+	m_toKillText.setCharacterSize(32u);
+	m_toKillText.setString(KTEXT("Amount to kill: ") + std::to_wstring(0));
+	Vec2i screenPos;
+	m_uiIndex = KApplication::getApplicationInstance()->getRenderer()->addTextToScreen(m_toKillText, Vec2i(10, 40));
 	return KInitStatus::Success;
 }
 
@@ -102,22 +107,31 @@ void PlayState::tick()
 		if (pMesh->isMeshActive())
 			pMesh->UpdateMeshCollider();
 	}
-	//for (auto pMesh : m_meshColliders)
+	for (auto pMesh : m_meshColliders)
 	{
-		//mp_slAdmin->getStateLogicUnit<WorldCollisions>()->CheckCollision(*mp_playerMesh);
+		//mp_slAdmin->getStateLogicUnit<WorldCollisions>()->CheckCollision(*mp_playerMesh, true);
 	}
 
 	handleAI();
 
 	auto player = mp_slAdmin->getStateLogicUnit<PlayerController>();
 
-	if (!player->isPlayerAlive())
+	if (player->getAmountKilled() >= AMOUNT_TO_KILL)
 	{
 		mp_stateDirector->setActiveLogicState(KTEXT("winstate"));
 	}
 
+	if (player->getPlayerState() == PlayerState::StateDead)
+	{
+		mp_stateDirector->setActiveLogicState(KTEXT("losestate"));
+	}
+
 	if (KInput::JustPressed(KKey::Escape))
+	{
 		KApplication::getApplicationInstance()->closeApplication();
+	}
+	std::wstring str = KTEXT("Amount to kill: ") + std::to_wstring(AMOUNT_TO_KILL - player->getAmountKilled());
+	KApplication::getApplicationInstance()->getRenderer()->getTextByIndex(m_uiIndex).setString(str);
 }
 
 void PlayState::registerLogicUnits()
@@ -174,7 +188,7 @@ void PlayState::setupAI()
 
 void PlayState::handleAI()
 {
-	static float AISpawnTime = 10.0f;
+	static float AISpawnTime = 6.0f;
 	if (m_aiTimer == 0.0f)
 	{
 		spawnAI();
@@ -183,15 +197,14 @@ void PlayState::handleAI()
 	{
 		spawnAI();
 		m_aiTimer = 0.0f;
-		AISpawnTime -= 1.0f;
-	}
-	m_aiTimer += KApplication::getApplicationInstance()->getDeltaTime();
-	if (AISpawnTime <= 0.0f)
-	{
-		m_bGameOver = true;
-		KPrintf(L"\n\n\nGame over!\n\n\n");
+		if (m_amountToSpawn < MAX_SPAWN_COUNT)
+		{
+			++m_amountToSpawn;
+			AISpawnTime += 1.0f;
+		}
 	}
 
+	m_aiTimer += KApplication::getApplicationInstance()->getDeltaTime();
 }
 
 void PlayState::spawnAI()
@@ -225,16 +238,19 @@ void PlayState::spawnAI()
 		return (point.x >= minX) && (point.x < maxX) && (point.y >= minY) && (point.y < maxY);
 	};
 
-	KGameObject* pObjects[AMOUNT_TO_SPAWN];
-
+	KGameObject** pObjects = new KGameObject*[m_amountToSpawn];
+	KCHECK(pObjects);
 	sf::FloatRect viewBounds;
 	viewBounds.left = viewCentre.x - (screenSize.x / 2.0f);
 	viewBounds.height = viewCentre.y - (screenSize.y / 2.0f);
 	viewBounds.width = screenSize.x;
 	viewBounds.height = screenSize.y;
 
-	for (auto& pObj : pObjects)
+	for (int32 i = 0; i < m_amountToSpawn; ++i)
+		//for (auto& pObj : pObjects)
 	{
+		KGameObject* pObj = pObjects[i];
+
 		pObj = getSpareAI(m_gameObjects);
 		if (!pObj)
 			continue;
@@ -254,4 +270,6 @@ void PlayState::spawnAI()
 		auto aiSLU = dynamic_cast<AIBehaviour*>(mp_slAdmin->getGameLogicUnitByGameObjectName(pObj->getObjectName()));
 		aiSLU->setState(AIState::Run);
 	}
+
+	delete[] pObjects;
 }

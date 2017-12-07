@@ -1,32 +1,27 @@
-#include "GameStates\WinState.h"
-#include "AssetLoader\KAssetLoader.h"
-
+#include "GameStates\LoseState.h"
+#include <AssetLoader\KAssetLoader.h>
 #include <KApplication.h>
-#include <Input\KInput.h>
 
-using namespace Krawler::LogicState;
+using namespace Krawler;
 
-Krawler::KInitStatus WinState::setupState(const KLogicStateInitialiser & initialiser)
+KInitStatus LoseState::setupState(const LogicState::KLogicStateInitialiser & initialiser)
 {
 	KINIT_CHECK(KLogicState::setupState(initialiser));
-	if (status != Success)
-		return status;
 
-	m_winText.setCharacterSize(48);
-	m_winText.setString(KTEXT("You have defeated \n the evil MoreBots!"));
-	m_winText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("res\\seriphim.ttf")));
-	m_winText.setStyle(sf::Text::Underlined);
+	m_loseText.setCharacterSize(64);
+	m_loseText.setStyle(sf::Text::Underlined);
+	m_loseText.setString(KTEXT("The evil MoreBots have \n bested you in combat!"));
+	m_loseText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("res\\seriphim.ttf")));
 
-	return Krawler::KInitStatus::Success;
+	return KInitStatus::Success;
 }
 
-void WinState::cleanupState()
+void LoseState::cleanupState()
 {
-
 	KLogicState::cleanupState();
 }
 
-void WinState::tick()
+void LoseState::tick()
 {
 	KLogicState::tick();
 	auto app = KApplication::getApplicationInstance();
@@ -39,9 +34,9 @@ void WinState::tick()
 		auto view = app->getRenderWindow()->getView();
 		view.setCenter(Vec2f(screenSize) * 0.5f);
 		app->getRenderWindow()->setView(view);
-		const auto globalBounds = m_winText.getGlobalBounds();
+		const auto globalBounds = m_loseText.getGlobalBounds();
 		const Vec2i textPos = Vec2i(screenSize.x / 2, screenSize.y / 2) - Vec2i((int)globalBounds.width / 2.0f, (int)globalBounds.height / 2.0f);
-		app->getRenderer()->addTextToScreen(m_winText, textPos);
+		app->getRenderer()->addTextToScreen(m_loseText, textPos);
 	}
 
 #ifdef _DEBUG

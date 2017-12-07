@@ -123,6 +123,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ld40.cpp" />
+    <ClCompile Include="src\GameStates\LoseState.cpp" />
     <ClCompile Include="src\GameStates\WinState.cpp" />
     <ClCompile Include="src\LogicUnits\AIBehaviour.cpp" />
     <ClCompile Include="src\LogicUnits\Animator.cpp" />
@@ -140,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Collisions\MeshCollider.h" />
+    <ClInclude Include="include\GameStates\LoseState.h" />
     <ClInclude Include="include\GameStates\WinState.h" />
     <ClInclude Include="include\LogicUnits\AIBehaviour.h" />
     <ClInclude Include="include\LogicUnits\Animator.h" />

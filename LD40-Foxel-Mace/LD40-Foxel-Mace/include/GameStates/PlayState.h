@@ -9,7 +9,11 @@ using namespace Krawler;
 using namespace Krawler::LogicState;
 
 #define MAX_AI_COUNT 80
-#define AMOUNT_TO_SPAWN 5
+#define CACHED_ENEMY_COUNT 200
+#define MAX_SPAWN_COUNT 20
+#define MIN_SPAWN_COUNT 3
+#define AMOUNT_TO_KILL 150
+#define MAX_SPAWN_TIMER 12.0f
 
 class PlayState : public KLogicState
 {
@@ -20,7 +24,7 @@ public:
 	virtual KInitStatus setupState(const KLogicStateInitialiser&  initaliser) override;
 	virtual void cleanupState() override;
 	virtual void fixedTick() override;
-	virtual void tick() override; 
+	virtual void tick() override;
 
 private:
 
@@ -39,9 +43,6 @@ private:
 
 	MeshCollider* mp_playerMesh = nullptr;
 
-	const float PlayerMoveSpeed;
-	const float MaxRaycastDistance;
-
 	std::vector<MeshCollider*> m_meshColliders;
 
 	int32 m_firstAiIdx = -1;
@@ -51,6 +52,8 @@ private:
 
 	float m_aiTimer = 0.0f;
 
+	int32 m_amountToSpawn;
+	uint32 m_uiIndex;
 };
 
 #endif

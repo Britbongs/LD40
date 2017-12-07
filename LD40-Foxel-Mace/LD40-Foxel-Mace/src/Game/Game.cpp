@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "GameStates\PlayState.h"
 #include "GameStates\WinState.h"
+#include "GameStates\LoseState.h"
 
 using namespace Krawler;
 
@@ -19,5 +20,8 @@ void Game::registerGameStates()
 
 	stateInit.stateIdentifier = KTEXT("winstate");
 	pDirector->registerLogicState(new WinState, &stateInit);
+
+	stateInit.stateIdentifier = KTEXT("losestate");
+	pDirector->registerLogicState(new LoseState, &stateInit);
 
 }

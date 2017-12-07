@@ -1,11 +1,11 @@
 #include "LogicUnits\PlayerController.h"
-#include <Input\KInput.h>
 #include "LogicUnits\WorldCollisions.h"
+#include "LogicUnits\AIBehaviour.h"
+
+#include <Input\KInput.h>
 #include <KApplication.h>
 
 #include <SFML\Audio.hpp>
-
-#include "LogicUnits\AIBehaviour.h"
 
 using namespace Krawler::SLU;
 using namespace Krawler::Maths;
@@ -15,7 +15,7 @@ using namespace Krawler::Input;
 
 PlayerController::PlayerController(KGameObject * pObj, SLU::KStateLogicUnitAdministrator & rAdmin)
 	:SLU::KGameObjectLogicUnit(CLASS_NAME_TO_TAG(PlayerController), rAdmin),
-	PlayerMoveSpeed(250.0f), MaxRaycastDistance(500)
+	PlayerMoveSpeed(250.0f), MaxRaycastDistance(500), MaxPlayerHealth(8), m_playerHealth(MaxPlayerHealth)
 {
 	setGameObject(pObj);
 }
@@ -90,11 +90,7 @@ void PlayerController::tickUnit()
 		go->setRotation(Maths::Degrees(angle) - 180.0f);
 
 	}
-	case PlayerState::StateDying:
-		if (!mp_DieAnimator->isAnimationPlaying())
-		{
-			changeState(PlayerState::StateDead);
-		}
+
 	default:
 	case PlayerState::StateIdle:
 		break;
@@ -109,13 +105,8 @@ void PlayerController::setMeshCollider(MeshCollider * const pMesh)
 
 void PlayerController::takeDamage()
 {
-	if (m_playerHealth >= 0)
+	if (m_playerHealth > 0)
 		--m_playerHealth;
-	else
-	{
-		changeState(PlayerState::StateDying);
-	}
-	KPrintf(L"Player Health : %d\n", m_playerHealth);
 }
 
 Vec2f PlayerController::getMoveDir()
@@ -178,7 +169,7 @@ void PlayerController::fireProjectile(float angle)
 		AIBehaviour* aiInstance = dynamic_cast<AIBehaviour*> (aiScript);
 
 		aiInstance->setState(AIState::Shot);
-
+		++m_amountKilled;
 	}
 }
 
@@ -223,7 +214,6 @@ bool PlayerController::loadAnimations()
 
 		getStateAdmin()->addUnit(mp_IdleAnimator);
 	}
-
 
 	{//Aim anim
 		sf::Texture* pPlayerAimAnim = assetLoader.loadTexture(KTEXT("player_aim.png"));
@@ -270,7 +260,6 @@ bool PlayerController::loadSounds()
 	if (!footstepBuffer)
 		return false;
 
-
 	sf::SoundBuffer* const railgunBuffer = assetLoader.loadSoundBuffer(KTEXT("railgun.ogg"));
 
 	mp_footStepSound = new sf::Sound(*footstepBuffer);
@@ -280,50 +269,36 @@ bool PlayerController::loadSounds()
 
 	mp_railgunSound = new sf::Sound(*railgunBuffer);
 	mp_railgunSound->setLoop(false);
+
 	return true;
 }
 
 void PlayerController::checkForStateChange(const Vec2f & movVec)
 {
-
-	if (!m_bIsAiming)
+	if (m_playerState == PlayerState::StateDead)
 	{
-		if (movVec == Vec2f(0.0f, 0.0f))
-		{
-			//m_footStepSound.pause();
-			m_bIsMoving = false;
-			if (m_playerState != PlayerState::StateIdle)
-			{
-				changeState(PlayerState::StateIdle);
-			}
-		}
-		else
-		{
-			m_bIsMoving = true;
-			if (m_playerState != PlayerState::StateRunning)
-			{
-				if (mp_footStepSound->getStatus() != sf::Sound::Playing)
-				{
-				}
-				changeState(PlayerState::StateRunning);
-			}
-		}
+		return;
+	}
+	if (m_playerState != PlayerState::StateDying && !isPlayerAlive())
+	{
+		changeState(PlayerState::StateDying);
+		return;
+	}
+	if (m_playerState != PlayerState::StateDying)
+	{
+		handlePlayerShootingMechanics(movVec);
 	}
 	else
 	{
-		//m_footStepSound.pause();
-
-		if (m_playerState != PlayerState::StateAiming)
-		{
-			changeState(PlayerState::StateAiming);
-		}
+		if (!mp_DieAnimator->isAnimationPlaying())
+			changeState(PlayerState::StateDead);
 	}
 }
 
 void PlayerController::changeState(PlayerState nextState)
 {
-
 	static Animator* mp_currentAnimator = nullptr;
+
 	if (mp_currentAnimator)
 	{
 		mp_currentAnimator->stop();
@@ -353,6 +328,43 @@ void PlayerController::changeState(PlayerState nextState)
 		mp_DieAnimator->setFrame(0, true);
 		mp_DieAnimator->play();
 		mp_currentAnimator = mp_AimAnimator;
+		m_playerState = PlayerState::StateDying;
 		break;
+	case PlayerState::StateDead:
+		m_playerState = PlayerState::StateDead;
+		break;
+	}
+}
+
+void PlayerController::handlePlayerShootingMechanics(const Vec2f& movVec)
+{
+	if (!m_bIsAiming)
+	{
+		if (movVec == Vec2f(0.0f, 0.0f))
+		{
+			m_bIsMoving = false;
+			if (m_playerState != PlayerState::StateIdle)
+			{
+				changeState(PlayerState::StateIdle);
+			}
+		}
+		else
+		{
+			m_bIsMoving = true;
+			if (m_playerState != PlayerState::StateRunning)
+			{
+				if (mp_footStepSound->getStatus() != sf::Sound::Playing)
+				{
+				}
+				changeState(PlayerState::StateRunning);
+			}
+		}
+	}
+	else
+	{
+		if (m_playerState != PlayerState::StateAiming)
+		{
+			changeState(PlayerState::StateAiming);
+		}
 	}
 }

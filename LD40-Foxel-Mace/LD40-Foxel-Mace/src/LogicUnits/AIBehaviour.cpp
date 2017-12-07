@@ -28,7 +28,10 @@ KInitStatus AIBehaviour::initialiseUnit()
 
 void AIBehaviour::tickUnit()
 {
-
+	if (!getGameObj())
+	{
+		return;
+	}
 	const float dt = KApplication::getApplicationInstance()->getDeltaTime();
 
 	assert(mp_playerObj);
@@ -153,7 +156,7 @@ void AIBehaviour::resetAIState()
 
 Vec2f AIBehaviour::getAvoidanceVector(const Vec2f& directionVector)
 {
-	const float MAX_AVOID_FORCE(10000);
+	const float MAX_AVOID_FORCE(30000);
 	const float MAX_AHEAD(24);
 	struct CircleData
 	{
