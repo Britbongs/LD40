@@ -69,7 +69,7 @@ void MeshCollider::SetPointsList(const std::vector<Vec2f>& VertArray)
 
 void MeshCollider::resolve(Vec2f mtv)
 {
-	float dt = KApplication::getApplicationInstance()->getDeltaTime();
+	float dt = KApplication::getApp()->getDeltaTime();
 	mp_obj->move(mtv*dt);
 	UpdateMeshCollider();
 }

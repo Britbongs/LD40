@@ -12,7 +12,7 @@ Camera::Camera(Krawler::SLU::KStateLogicUnitAdministrator& rAdmin, KGameObject* 
 
 void Camera::tickUnit()
 {
-	sf::View view = KApplication::getApplicationInstance()->getRenderWindow()->getView();
+	sf::View view = KApplication::getApp()->getRenderWindow()->getView();
 	auto obj = getGameObj();
 	view.setCenter(obj->getCentrePosition());
 
@@ -51,6 +51,6 @@ void Camera::tickUnit()
 		adjusted.y = m_mapBounds.y - halfSize.y;
 	}
 	view.setCenter(adjusted);
-	KApplication::getApplicationInstance()->getRenderWindow()->setView(view);
+	KApplication::getApp()->getRenderWindow()->setView(view);
 }
 

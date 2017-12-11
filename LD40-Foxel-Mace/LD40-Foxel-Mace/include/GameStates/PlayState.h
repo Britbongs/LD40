@@ -15,6 +15,12 @@ using namespace Krawler::LogicState;
 #define AMOUNT_TO_KILL 150
 #define MAX_SPAWN_TIMER 12.0f
 
+#define TILE_SIZE 32
+#define MAP_WIDTH (TILE_SIZE * 30)
+#define MAP_HEIGHT (TILE_SIZE * 20)
+#define CHARACTER_SIZE 48.0f
+
+
 class PlayState : public KLogicState
 {
 public:

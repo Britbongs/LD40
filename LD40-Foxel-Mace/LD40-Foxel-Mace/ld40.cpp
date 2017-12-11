@@ -27,7 +27,7 @@ int WINAPI WinMain(
 
 	StartupEngine(&krawlerInitApplicationData);
 	game.registerGameStates();
-	KApplication* pApp = KApplication::getApplicationInstance();
+	KApplication* pApp = KApplication::getApp();
 	pApp->getLogicStateDirector()->setActiveLogicState(KTEXT("play"));
 
 	InitialiseSubmodules();

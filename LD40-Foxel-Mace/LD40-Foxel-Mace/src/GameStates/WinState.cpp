@@ -29,7 +29,7 @@ void WinState::cleanupState()
 void WinState::tick()
 {
 	KLogicState::tick();
-	auto app = KApplication::getApplicationInstance();
+	auto app = KApplication::getApp();
 
 	if (!m_bHasStateTicked)
 	{

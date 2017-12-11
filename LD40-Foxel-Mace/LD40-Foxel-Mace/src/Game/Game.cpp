@@ -8,7 +8,7 @@ using namespace Krawler;
 
 void Game::registerGameStates()
 {
-	KApplication* pApp = KApplication::getApplicationInstance();
+	KApplication* pApp = KApplication::getApp();
 	assert(pApp);
 	KLogicStateDirector* pDirector = pApp->getLogicStateDirector();
 	assert(pDirector);

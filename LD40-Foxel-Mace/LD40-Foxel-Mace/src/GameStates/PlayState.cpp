@@ -17,10 +17,6 @@
 using namespace Krawler::Input;
 using namespace sf;
 
-#define TILE_SIZE 32
-#define MAP_WIDTH (TILE_SIZE * 30)
-#define MAP_HEIGHT (TILE_SIZE * 20)
-#define CHARACTER_SIZE 48.0f
 
 PlayState::PlayState()
 	: m_amountToSpawn(MIN_SPAWN_COUNT)
@@ -66,7 +62,7 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 	m_tiledMap.setScale(2.0f, 2.0f);
 	KFREE_ARR(map);
 
-	KApplication::getApplicationInstance()->getRenderer()->setActiveTiledMap(&m_tiledMap);
+	KApplication::getApp()->getRenderer()->setActiveTiledMap(&m_tiledMap);
 
 	setupAI();
 
@@ -78,7 +74,7 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 	m_toKillText.setCharacterSize(32u);
 	m_toKillText.setString(KTEXT("Amount to kill: ") + std::to_wstring(0));
 	Vec2i screenPos;
-	m_uiIndex = KApplication::getApplicationInstance()->getRenderer()->addTextToScreen(m_toKillText, Vec2i(10, 40));
+	m_uiIndex = KApplication::getApp()->getRenderer()->addTextToScreen(m_toKillText, Vec2i(10, 40));
 	return KInitStatus::Success;
 }
 
@@ -128,10 +124,10 @@ void PlayState::tick()
 
 	if (KInput::JustPressed(KKey::Escape))
 	{
-		KApplication::getApplicationInstance()->closeApplication();
+		KApplication::getApp()->closeApplication();
 	}
 	std::wstring str = KTEXT("Amount to kill: ") + std::to_wstring(AMOUNT_TO_KILL - player->getAmountKilled());
-	KApplication::getApplicationInstance()->getRenderer()->getTextByIndex(m_uiIndex).setString(str);
+	KApplication::getApp()->getRenderer()->getTextByIndex(m_uiIndex).setString(str);
 }
 
 void PlayState::registerLogicUnits()
@@ -204,13 +200,13 @@ void PlayState::handleAI()
 		}
 	}
 
-	m_aiTimer += KApplication::getApplicationInstance()->getDeltaTime();
+	m_aiTimer += KApplication::getApp()->getDeltaTime();
 }
 
 void PlayState::spawnAI()
 {
-	const Vec2f screenSize(KApplication::getApplicationInstance()->getRenderWindow()->getSize());
-	const Vec2f viewCentre(KApplication::getApplicationInstance()->getRenderWindow()->getView().getCenter());
+	const Vec2f screenSize(KApplication::getApp()->getRenderWindow()->getSize());
+	const Vec2f viewCentre(KApplication::getApp()->getRenderWindow()->getView().getCenter());
 	auto getSpareAI = [](std::vector<KGameObject*>& objList) -> KGameObject*
 	{
 		for (auto& member : objList)
@@ -259,8 +255,8 @@ void PlayState::spawnAI()
 		Vec2f pos;
 		do
 		{
-			pos.x = Maths::RandFloat(0.0f, MAP_WIDTH);
-			pos.y = Maths::RandFloat(0.0f, MAP_HEIGHT);
+			pos.x = Maths::RandFloat(-MAP_WIDTH / 2.0f, MAP_WIDTH);
+			pos.y = Maths::RandFloat(-MAP_HEIGHT / 2.0f, MAP_HEIGHT);
 
 		} while (contains(viewBounds, pos));
 

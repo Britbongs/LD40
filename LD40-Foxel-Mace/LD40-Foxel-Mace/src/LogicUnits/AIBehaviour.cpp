@@ -9,7 +9,7 @@
 
 AIBehaviour::AIBehaviour(KGameObject * pObj, SLU::KStateLogicUnitAdministrator & rAdmin)
 	: KGameObjectLogicUnit(CLASS_NAME_TO_TAG(AIBehaviour) + GenerateUUID(), rAdmin),
-	AIMoveSpeed(85.0f), mp_AIRunAnimator(nullptr), m_aiState(AIState::Dead)
+	AIMoveSpeed(120.0f), mp_AIRunAnimator(nullptr), m_aiState(AIState::Dead)
 {
 	setGameObject(pObj);
 }
@@ -32,7 +32,7 @@ void AIBehaviour::tickUnit()
 	{
 		return;
 	}
-	const float dt = KApplication::getApplicationInstance()->getDeltaTime();
+	const float dt = KApplication::getApp()->getDeltaTime();
 
 	assert(mp_playerObj);
 	switch (m_aiState)
@@ -156,7 +156,7 @@ void AIBehaviour::resetAIState()
 
 Vec2f AIBehaviour::getAvoidanceVector(const Vec2f& directionVector)
 {
-	const float MAX_AVOID_FORCE(30000);
+	const float MAX_AVOID_FORCE(1e10);
 	const float MAX_AHEAD(24);
 	struct CircleData
 	{
@@ -176,8 +176,10 @@ Vec2f AIBehaviour::getAvoidanceVector(const Vec2f& directionVector)
 	const Vec2f centrePos = getGameObj()->getCentrePosition();
 	float highestPriorityDistSquare = FLT_MAX;
 	Vec2f ahead, ahead2;
-	ahead = centrePos + directionVector * MAX_AHEAD;
-	ahead2 = centrePos + directionVector * (MAX_AHEAD / 2.0f);
+	const float velLength = GetLength(directionVector * AIMoveSpeed) / AIMoveSpeed;
+
+	ahead = centrePos + (directionVector * velLength);
+	ahead2 = centrePos + (directionVector * (velLength / 2.0f));
 
 	for (auto aiLU : aiList)
 	{

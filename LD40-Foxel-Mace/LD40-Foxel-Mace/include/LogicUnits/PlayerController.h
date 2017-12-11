@@ -55,6 +55,7 @@ private:
 	void checkForStateChange(const Vec2f& movVec);
 	void changeState(PlayerState nextState);
 	void handlePlayerShootingMechanics(const Vec2f& movVec);
+	void checkInsideBounds(Vec2f& movVec);
 
 	const float PlayerMoveSpeed;
 	const float MaxRaycastDistance;
@@ -63,10 +64,13 @@ private:
 
 	MeshCollider* mp_meshCollider = nullptr;
 
+	KGameObject* mp_muzzleFlashObj = nullptr;
+
 	Animator* mp_RunAnimator = nullptr;
 	Animator* mp_IdleAnimator = nullptr;
 	Animator* mp_AimAnimator = nullptr;
 	Animator* mp_DieAnimator = nullptr;
+	Animator* mp_MuzzleAnim = nullptr;
 
 	sf::Sound* mp_footStepSound;
 	sf::Sound* mp_railgunSound;

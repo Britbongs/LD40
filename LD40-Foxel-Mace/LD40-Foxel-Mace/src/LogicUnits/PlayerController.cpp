@@ -1,6 +1,7 @@
 #include "LogicUnits\PlayerController.h"
 #include "LogicUnits\WorldCollisions.h"
 #include "LogicUnits\AIBehaviour.h"
+#include "GameStates\PlayState.h"
 
 #include <Input\KInput.h>
 #include <KApplication.h>
@@ -15,7 +16,7 @@ using namespace Krawler::Input;
 
 PlayerController::PlayerController(KGameObject * pObj, SLU::KStateLogicUnitAdministrator & rAdmin)
 	:SLU::KGameObjectLogicUnit(CLASS_NAME_TO_TAG(PlayerController), rAdmin),
-	PlayerMoveSpeed(250.0f), MaxRaycastDistance(500), MaxPlayerHealth(8), m_playerHealth(MaxPlayerHealth)
+	PlayerMoveSpeed(175.0f), MaxRaycastDistance(500), MaxPlayerHealth(8), m_playerHealth(MaxPlayerHealth)
 {
 	setGameObject(pObj);
 }
@@ -26,6 +27,13 @@ PlayerController::~PlayerController()
 
 KInitStatus PlayerController::initialiseUnit()
 {
+	auto renderer = KApplication::getApp()->getRenderer();
+	KCHECK(renderer);
+	mp_muzzleFlashObj = getStateAdmin()->getLogicState().addGameObject(Vec2f(PLAYER_ANIM_SIZE, PLAYER_ANIM_SIZE), true);
+	KCHECK(mp_muzzleFlashObj);
+	mp_muzzleFlashObj->setRenderLayer(6);
+	renderer->addToRendererQueue(mp_muzzleFlashObj);
+
 	bool result = loadAnimations();
 	if (!result)
 		return KInitStatus::MissingResource;
@@ -42,7 +50,7 @@ KInitStatus PlayerController::initialiseUnit()
 	sf::Font* const pFont = asset.loadFont(KTEXT("res\\seriphim.ttf"));
 	sf::Text pText = sf::Text(KTEXT("HP: "), *pFont);
 	pText.setCharacterSize(32);
-	m_uiIndex = KApplication::getApplicationInstance()->getRenderer()->addTextToScreen(pText, Vec2i(10, 10));
+	m_uiIndex = KApplication::getApp()->getRenderer()->addTextToScreen(pText, Vec2i(10, 10));
 
 	return KInitStatus::Success;
 }
@@ -62,11 +70,12 @@ void PlayerController::tickUnit()
 	updateAiming();
 	checkForStateChange(movDir);
 
-	float deltaTime = KApplication::getApplicationInstance()->getDeltaTime();
+	float deltaTime = KApplication::getApp()->getDeltaTime();
 	switch (m_playerState)
 	{
 	case PlayerState::StateRunning:
 	{
+		checkInsideBounds(movDir);
 		go->move(Normalise(movDir) * PlayerMoveSpeed * deltaTime);
 		float angle = Degrees(atan2(movDir.y, movDir.x)) - 180.0f;
 		go->setRotation(angle);
@@ -88,7 +97,6 @@ void PlayerController::tickUnit()
 				fireProjectile(Degrees(angle));
 		}
 		go->setRotation(Maths::Degrees(angle) - 180.0f);
-
 	}
 
 	default:
@@ -176,7 +184,7 @@ void PlayerController::fireProjectile(float angle)
 void PlayerController::updatePlayerUI()
 {
 	std::wstring str = KTEXT("HP: ") + std::to_wstring(m_playerHealth);
-	KApplication::getApplicationInstance()->getRenderer()->getTextByIndex(m_uiIndex).setString(str);
+	KApplication::getApp()->getRenderer()->getTextByIndex(m_uiIndex).setString(str);
 }
 
 bool PlayerController::loadAnimations()
@@ -235,7 +243,7 @@ bool PlayerController::loadAnimations()
 		mp_DieAnimator = new Animator(pPlayerDieAnim, *getStateAdmin());
 
 		mp_DieAnimator->setGameObject(getGameObj());
-		mp_DieAnimator->setFrameTime(150.0f / 1000.0f);
+		mp_DieAnimator->setFrameTime(sf::milliseconds(150).asSeconds());
 		mp_DieAnimator->setTileDimension(Vec2i(PLAYER_ANIM_SIZE, PLAYER_ANIM_SIZE));
 		mp_DieAnimator->addKeyFrame(sf::IntRect(0, 0, 1, 1));
 		mp_DieAnimator->addKeyFrame(sf::IntRect(1, 0, 1, 1));
@@ -246,6 +254,20 @@ bool PlayerController::loadAnimations()
 		mp_DieAnimator->setLooping(false);
 
 		getStateAdmin()->addUnit(mp_DieAnimator);
+	}
+
+	{//muzzle flash
+		sf::Texture* pMuzzleFlash = assetLoader.loadTexture(KTEXT("muzzle_flash"));
+		mp_MuzzleAnim = new Animator(pMuzzleFlash, *getStateAdmin());
+		mp_MuzzleAnim->setGameObject(getGameObj());
+		mp_MuzzleAnim->setFrameTime(sf::milliseconds(80).asSeconds());
+		mp_MuzzleAnim->setTileDimension(Vec2i(PLAYER_ANIM_SIZE, PLAYER_ANIM_SIZE));
+		mp_MuzzleAnim->addKeyFrame(sf::IntRect(0, 0, 1, 1));
+		mp_MuzzleAnim->addKeyFrame(sf::IntRect(1, 0, 1, 1));
+		mp_MuzzleAnim->addKeyFrame(sf::IntRect(2, 0, 1, 1));
+		mp_MuzzleAnim->setLooping(false);
+
+		getStateAdmin()->addUnit(mp_MuzzleAnim);
 	}
 
 	return true;
@@ -366,5 +388,27 @@ void PlayerController::handlePlayerShootingMechanics(const Vec2f& movVec)
 		{
 			changeState(PlayerState::StateAiming);
 		}
+	}
+}
+
+void PlayerController::checkInsideBounds(Vec2f & movVec)
+{
+	Vec2f centrePos = getGameObj()->getCentrePosition();
+	float dt = KApplication::getApp()->getDeltaTime();
+	sf::FloatRect playerbounds(getGameObj()->getFixedGlobalBounds());
+	playerbounds.left = centrePos.x - playerbounds.width / 2.0f;
+	playerbounds.top = centrePos.y - playerbounds.height / 2.0f;
+
+	playerbounds.left += movVec.x * PlayerMoveSpeed * dt;
+	playerbounds.top += movVec.y * PlayerMoveSpeed * dt;
+
+	if (playerbounds.left + playerbounds.width > MAP_WIDTH || playerbounds.left < 0)
+	{
+		movVec.x = 0.0f;
+	}
+
+	if (playerbounds.top + playerbounds.height > MAP_HEIGHT || playerbounds.top < 0)
+	{
+		movVec.y = 0.0f;
 	}
 }

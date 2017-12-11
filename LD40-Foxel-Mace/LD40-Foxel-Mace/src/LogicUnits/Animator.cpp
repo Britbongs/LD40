@@ -62,7 +62,7 @@ void Animator::tickUnit()
 	{
 		return;
 	}
-	const float dt = KApplication::getApplicationInstance()->getDeltaTime();
+	const float dt = KApplication::getApp()->getDeltaTime();
 
 	m_timer += dt;
 
