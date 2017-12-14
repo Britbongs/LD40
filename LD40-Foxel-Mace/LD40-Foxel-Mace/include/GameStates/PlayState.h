@@ -16,8 +16,8 @@ using namespace Krawler::LogicState;
 #define MAX_SPAWN_TIMER 12.0f
 
 #define TILE_SIZE 32
-#define MAP_WIDTH (TILE_SIZE * 30)
-#define MAP_HEIGHT (TILE_SIZE * 20)
+#define MAP_WIDTH (TILE_SIZE * 36)
+#define MAP_HEIGHT (TILE_SIZE * 24)
 #define CHARACTER_SIZE 48.0f
 
 

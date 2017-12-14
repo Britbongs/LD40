@@ -44,8 +44,7 @@ KInitStatus PlayerController::initialiseUnit()
 
 	getGameObj()->setRenderLayer(5);
 
-
-	auto asset = KAssetLoader::getAssetLoader();
+	auto& asset = KAssetLoader::getAssetLoader();
 	sf::Font* const pFont = asset.loadFont(KTEXT("seriphim.ttf"));
 	sf::Text pText = sf::Text(KTEXT("HP: "), *pFont);
 	pText.setCharacterSize(32);
@@ -56,8 +55,6 @@ KInitStatus PlayerController::initialiseUnit()
 
 void PlayerController::cleanupUnit()
 {
-	//KFREE(mp_footStepSound);
-	//KFREE(mp_railgunSound);
 }
 
 void PlayerController::tickUnit()
@@ -280,10 +277,6 @@ bool PlayerController::loadAnimations()
 		mp_MuzzleAnim->addKeyFrame(sf::IntRect(0, 0, 1, 1));
 		mp_MuzzleAnim->addKeyFrame(sf::IntRect(1, 0, 1, 1));
 		mp_MuzzleAnim->addKeyFrame(sf::IntRect(2, 0, 1, 1));
-		//mp_MuzzleAnim->setLooping(true);
-		//mp_MuzzleAnim->setFrame(0, true);
-		//mp_MuzzleAnim->play();
-		//mp_muzzleFlashObj->setPosition(200, 200);
 		getStateAdmin()->addUnit(mp_MuzzleAnim);
 	}
 
@@ -295,10 +288,11 @@ bool PlayerController::loadSounds()
 	auto& assetLoader = KAssetLoader::getAssetLoader();
 	assetLoader.setRootFolder(KTEXT("res\\"));
 
-	auto* footstepBuffer = assetLoader.loadSoundBuffer(KTEXT("footstep.ogg"));
-	auto* hitSound = assetLoader.loadSoundBuffer(KTEXT("player_hit.ogg"));
-	auto* railgunBuffer = assetLoader.loadSoundBuffer(KTEXT("railgun.ogg"));
-	auto* playerDie = assetLoader.loadSoundBuffer(KTEXT("player_death.ogg"));
+	sf::SoundBuffer* footstepBuffer = assetLoader.loadSoundBuffer(KTEXT("footstep.ogg"));
+	sf::SoundBuffer* hitSound = assetLoader.loadSoundBuffer(KTEXT("player_hit.ogg"));
+	sf::SoundBuffer* railgunBuffer = assetLoader.loadSoundBuffer(KTEXT("railgun.ogg"));
+	sf::SoundBuffer* playerDie = assetLoader.loadSoundBuffer(KTEXT("player_death.ogg"));
+
 	if (!footstepBuffer)
 		return false;
 
@@ -307,17 +301,16 @@ bool PlayerController::loadSounds()
 
 	if (!hitSound)
 		return false;
-	
+
 	if (!playerDie)
 		return false;
 
-	m_playerHitSound.setBuffer(*hitSound);
-	m_playerHitSound.setVolume(100);
 	m_footStepSound.setBuffer(*footstepBuffer);
-
+	m_playerHitSound.setBuffer(*hitSound);
 	m_railgunSound.setBuffer(*railgunBuffer);
-	m_railgunSound.setVolume(75);
-	m_railgunSound.setLoop(false);
+	m_playerDeathSound.setBuffer(*playerDie);
+
+	m_railgunSound.setVolume(30);
 
 	return true;
 }
@@ -377,6 +370,7 @@ void PlayerController::changeState(PlayerState nextState)
 		mp_DieAnimator->setFrame(0, true);
 		mp_DieAnimator->play();
 		mp_currentAnimator = mp_AimAnimator;
+		m_playerDeathSound.play();
 		m_playerState = PlayerState::StateDying;
 		break;
 	case PlayerState::StateDead:

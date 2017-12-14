@@ -5,6 +5,7 @@
 #include <SLU\KStateLogicUnit.h>
 #include <Krawler.h>
 #include "Collisions\MeshCollider.h"
+#include <SFML\Audio.hpp>
 
 #include "Animator.h"
 
@@ -51,6 +52,8 @@ private:
 	bool m_bWasJustAlive = false;
 
 	AIState m_aiState;
+
+	sf::Sound m_dieSound; 
 
 	float m_attackCooldownTimer = 0.0f;
 	bool m_bAttackOnCooldown = false;

@@ -9,7 +9,7 @@
 
 AIBehaviour::AIBehaviour(KGameObject * pObj, SLU::KStateLogicUnitAdministrator & rAdmin)
 	: KGameObjectLogicUnit(CLASS_NAME_TO_TAG(AIBehaviour) + GenerateUUID(), rAdmin),
-	AIMoveSpeed(120.0f), mp_AIRunAnimator(nullptr), m_aiState(AIState::Dead)
+	AIMoveSpeed(150.0f), mp_AIRunAnimator(nullptr), m_aiState(AIState::Dead)
 {
 	setGameObject(pObj);
 }
@@ -23,6 +23,10 @@ KInitStatus AIBehaviour::initialiseUnit()
 {
 	if (!loadAnimations())
 		return KInitStatus::MissingResource;
+
+	auto& loader = KAssetLoader::getAssetLoader();
+	sf::SoundBuffer* buffer = loader.loadSoundBuffer(KTEXT("enemy_death.ogg"));
+	m_dieSound.setBuffer(*buffer);
 	return Success;
 }
 
@@ -139,6 +143,7 @@ void AIBehaviour::setState(AIState state)
 		mp_AIRunAnimator->stop();
 		mp_EnemyPunch->stop();
 		mp_EnemyDieAnimator->play();
+		m_dieSound.play();
 
 		break;
 	}
@@ -188,16 +193,14 @@ Vec2f AIBehaviour::getAvoidanceVector(const Vec2f& directionVector)
 			continue;
 
 		const Vec2f objCentre = aiLU->getGameObj()->getCentrePosition();
-
-
 		CircleData circle;
 
 		circle.centre = objCentre;
 		circle.radiusSquared = aiLU->getGameObj()->getFixedGlobalBounds().width / 2.0f;
 		circle.radiusSquared *= circle.radiusSquared;
-
 		const bool collision = lineIntersectCircle(ahead, ahead2, circle);
 		const float distSquare = GetSquareLength(objCentre - centrePos);
+
 		if (collision && (!highestPriority || distSquare < highestPriorityDistSquare))
 		{
 			highestPriority = aiLU;
@@ -220,7 +223,6 @@ Vec2f AIBehaviour::getAvoidanceVector(const Vec2f& directionVector)
 bool AIBehaviour::loadAnimations()
 {
 	auto& assetLoader = KAssetLoader::getAssetLoader();
-	assetLoader.setRootFolder(KTEXT("res\\"));
 	sf::Texture* pRunTexture = assetLoader.loadTexture(KTEXT("enemy_run.png"));
 	sf::Texture* pDieTexture = assetLoader.loadTexture(KTEXT("enemy_explode.png"));
 	sf::Texture* pAttackTexture = assetLoader.loadTexture(KTEXT("enemy_punch.png"));
@@ -241,7 +243,7 @@ bool AIBehaviour::loadAnimations()
 	mp_AIRunAnimator->addKeyFrame(sf::IntRect(2, 0, 1, 1));
 	mp_AIRunAnimator->addKeyFrame(sf::IntRect(3, 0, 1, 1));
 	mp_AIRunAnimator->setLooping(true);
-	//mp_AIRunAnimator->stop();
+
 	rAdmin->addUnit(mp_AIRunAnimator);
 
 	mp_EnemyDieAnimator = new Animator(pDieTexture, *rAdmin);
@@ -256,7 +258,7 @@ bool AIBehaviour::loadAnimations()
 	mp_EnemyDieAnimator->addKeyFrame(sf::IntRect(4, 0, 1, 1));
 	mp_EnemyDieAnimator->addKeyFrame(sf::IntRect(5, 0, 1, 1));
 	mp_EnemyDieAnimator->setLooping(false);
-	//mp_AIRunAnimator->stop();
+
 	rAdmin->addUnit(mp_EnemyDieAnimator);
 
 
@@ -270,7 +272,7 @@ bool AIBehaviour::loadAnimations()
 	mp_EnemyPunch->addKeyFrame(sf::IntRect(2, 0, 1, 1));
 	mp_EnemyPunch->addKeyFrame(sf::IntRect(3, 0, 1, 1));
 	mp_EnemyPunch->setLooping(true);
-	//mp_AIRunAnimator->stop();
+
 	rAdmin->addUnit(mp_EnemyPunch);
 
 	return true;
