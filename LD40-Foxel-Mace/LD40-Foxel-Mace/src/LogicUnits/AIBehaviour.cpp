@@ -219,7 +219,7 @@ Vec2f AIBehaviour::getAvoidanceVector(const Vec2f& directionVector)
 
 bool AIBehaviour::loadAnimations()
 {
-	auto assetLoader = KAssetLoader::getAssetLoader();
+	auto& assetLoader = KAssetLoader::getAssetLoader();
 	assetLoader.setRootFolder(KTEXT("res\\"));
 	sf::Texture* pRunTexture = assetLoader.loadTexture(KTEXT("enemy_run.png"));
 	sf::Texture* pDieTexture = assetLoader.loadTexture(KTEXT("enemy_explode.png"));

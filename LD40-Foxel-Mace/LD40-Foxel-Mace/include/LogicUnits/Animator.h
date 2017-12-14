@@ -33,7 +33,7 @@ public:
 
 	virtual KInitStatus initialiseUnit() override { return Success; }
 	virtual void tickUnit() override;
-
+	uint32 getCurrentFrame() const { return m_currentFrame; }
 private:
 
 	std::vector<sf::IntRect> m_keyframes;

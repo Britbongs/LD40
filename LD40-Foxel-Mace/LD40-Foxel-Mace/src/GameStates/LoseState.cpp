@@ -11,7 +11,8 @@ KInitStatus LoseState::setupState(const LogicState::KLogicStateInitialiser & ini
 	m_loseText.setCharacterSize(64);
 	m_loseText.setStyle(sf::Text::Underlined);
 	m_loseText.setString(KTEXT("The evil MoreBots have \n bested you in combat!"));
-	m_loseText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("res\\seriphim.ttf")));
+	KAssetLoader::getAssetLoader().setRootFolder(L"res\\");
+	m_loseText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("seriphim.ttf")));
 
 	return KInitStatus::Success;
 }

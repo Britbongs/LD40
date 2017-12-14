@@ -72,8 +72,10 @@ private:
 	Animator* mp_DieAnimator = nullptr;
 	Animator* mp_MuzzleAnim = nullptr;
 
-	sf::Sound* mp_footStepSound;
-	sf::Sound* mp_railgunSound;
+	sf::Sound m_footStepSound;
+	sf::Sound m_railgunSound;
+	sf::Sound m_playerHitSound;
+	sf::Sound m_playerDeathSound; 
 
 	bool m_bIsMoving = false;
 	bool m_bIsAiming = false;

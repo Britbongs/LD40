@@ -3,7 +3,7 @@
 #include <Krawler.h>
 #include <KApplication.h>
 
-//#include <vld.h>
+#include <vld.h>
 
 #include "Game\Game.h"	
 

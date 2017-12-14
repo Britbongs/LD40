@@ -29,11 +29,10 @@ KInitStatus PlayerController::initialiseUnit()
 {
 	auto renderer = KApplication::getApp()->getRenderer();
 	KCHECK(renderer);
-	mp_muzzleFlashObj = getStateAdmin()->getLogicState().addGameObject(Vec2f(PLAYER_ANIM_SIZE, PLAYER_ANIM_SIZE), true);
+	mp_muzzleFlashObj = getStateAdmin()->getLogicState().addGameObject(Vec2f(32, 48), false);
 	KCHECK(mp_muzzleFlashObj);
 	mp_muzzleFlashObj->setRenderLayer(6);
-	renderer->addToRendererQueue(mp_muzzleFlashObj);
-
+	mp_muzzleFlashObj->setOrigin(mp_muzzleFlashObj->getHalfLocalBounds());
 	bool result = loadAnimations();
 	if (!result)
 		return KInitStatus::MissingResource;
@@ -47,7 +46,7 @@ KInitStatus PlayerController::initialiseUnit()
 
 
 	auto asset = KAssetLoader::getAssetLoader();
-	sf::Font* const pFont = asset.loadFont(KTEXT("res\\seriphim.ttf"));
+	sf::Font* const pFont = asset.loadFont(KTEXT("seriphim.ttf"));
 	sf::Text pText = sf::Text(KTEXT("HP: "), *pFont);
 	pText.setCharacterSize(32);
 	m_uiIndex = KApplication::getApp()->getRenderer()->addTextToScreen(pText, Vec2i(10, 10));
@@ -57,8 +56,8 @@ KInitStatus PlayerController::initialiseUnit()
 
 void PlayerController::cleanupUnit()
 {
-	KFREE(mp_footStepSound);
-	KFREE(mp_railgunSound);
+	//KFREE(mp_footStepSound);
+	//KFREE(mp_railgunSound);
 }
 
 void PlayerController::tickUnit()
@@ -70,15 +69,24 @@ void PlayerController::tickUnit()
 	updateAiming();
 	checkForStateChange(movDir);
 
+	if (!mp_MuzzleAnim->isAnimationPlaying())
+	{
+		mp_muzzleFlashObj->setObjectInactive();
+	}
 	float deltaTime = KApplication::getApp()->getDeltaTime();
 	switch (m_playerState)
 	{
 	case PlayerState::StateRunning:
 	{
+		float angle = Degrees(atan2(movDir.y, movDir.x)) - 180.0f;
 		checkInsideBounds(movDir);
 		go->move(Normalise(movDir) * PlayerMoveSpeed * deltaTime);
-		float angle = Degrees(atan2(movDir.y, movDir.x)) - 180.0f;
 		go->setRotation(angle);
+
+		if (m_footStepSound.getStatus() != sf::Sound::Playing && mp_RunAnimator->getCurrentFrame() == 1)
+		{
+			m_footStepSound.play();
+		}
 	}
 	break;
 
@@ -115,6 +123,8 @@ void PlayerController::takeDamage()
 {
 	if (m_playerHealth > 0)
 		--m_playerHealth;
+
+	m_playerHitSound.play();
 }
 
 Vec2f PlayerController::getMoveDir()
@@ -169,7 +179,11 @@ void PlayerController::fireProjectile(float angle)
 	const Vec2f size(16.0f, 16.0f);
 	CollisionData raycastResult = collider->DidOBBRaycastHit(size, angle, playerCentre, playerCentre + (dir * MaxRaycastDistance), mp_meshCollider);
 
-	mp_railgunSound->play();
+	m_railgunSound.play();
+	mp_MuzzleAnim->play();
+	mp_muzzleFlashObj->setRotation(getGameObj()->getRotation() - 90.0f);
+	mp_muzzleFlashObj->setPosition(getGameObj()->getPosition() + Vec2f(0.0f, 24.0f + sinf(mp_muzzleFlashObj->getRotation())));
+	mp_muzzleFlashObj->setObjectActive();
 
 	if (raycastResult.bDidCollide)
 	{
@@ -178,6 +192,7 @@ void PlayerController::fireProjectile(float angle)
 
 		aiInstance->setState(AIState::Shot);
 		++m_amountKilled;
+
 	}
 }
 
@@ -189,7 +204,7 @@ void PlayerController::updatePlayerUI()
 
 bool PlayerController::loadAnimations()
 {
-	auto assetLoader = KAssetLoader::getAssetLoader();
+	auto& assetLoader = KAssetLoader::getAssetLoader();
 	assetLoader.setRootFolder(KTEXT("res\\"));
 
 	{//running anim load
@@ -257,16 +272,18 @@ bool PlayerController::loadAnimations()
 	}
 
 	{//muzzle flash
-		sf::Texture* pMuzzleFlash = assetLoader.loadTexture(KTEXT("muzzle_flash"));
+		sf::Texture* pMuzzleFlash = assetLoader.loadTexture(KTEXT("muzzle_flash.png"));
 		mp_MuzzleAnim = new Animator(pMuzzleFlash, *getStateAdmin());
-		mp_MuzzleAnim->setGameObject(getGameObj());
-		mp_MuzzleAnim->setFrameTime(sf::milliseconds(80).asSeconds());
-		mp_MuzzleAnim->setTileDimension(Vec2i(PLAYER_ANIM_SIZE, PLAYER_ANIM_SIZE));
+		mp_MuzzleAnim->setGameObject(mp_muzzleFlashObj);
+		mp_MuzzleAnim->setFrameTime(sf::milliseconds(100).asSeconds());
+		mp_MuzzleAnim->setTileDimension(Vec2i(16, 24));
 		mp_MuzzleAnim->addKeyFrame(sf::IntRect(0, 0, 1, 1));
 		mp_MuzzleAnim->addKeyFrame(sf::IntRect(1, 0, 1, 1));
 		mp_MuzzleAnim->addKeyFrame(sf::IntRect(2, 0, 1, 1));
-		mp_MuzzleAnim->setLooping(false);
-
+		//mp_MuzzleAnim->setLooping(true);
+		//mp_MuzzleAnim->setFrame(0, true);
+		//mp_MuzzleAnim->play();
+		//mp_muzzleFlashObj->setPosition(200, 200);
 		getStateAdmin()->addUnit(mp_MuzzleAnim);
 	}
 
@@ -275,22 +292,32 @@ bool PlayerController::loadAnimations()
 
 bool PlayerController::loadSounds()
 {
-	auto assetLoader = KAssetLoader::getAssetLoader();
+	auto& assetLoader = KAssetLoader::getAssetLoader();
 	assetLoader.setRootFolder(KTEXT("res\\"));
-	sf::SoundBuffer* const footstepBuffer = assetLoader.loadSoundBuffer(KTEXT("footstep.ogg"));
 
+	auto* footstepBuffer = assetLoader.loadSoundBuffer(KTEXT("footstep.ogg"));
+	auto* hitSound = assetLoader.loadSoundBuffer(KTEXT("player_hit.ogg"));
+	auto* railgunBuffer = assetLoader.loadSoundBuffer(KTEXT("railgun.ogg"));
+	auto* playerDie = assetLoader.loadSoundBuffer(KTEXT("player_death.ogg"));
 	if (!footstepBuffer)
 		return false;
 
-	sf::SoundBuffer* const railgunBuffer = assetLoader.loadSoundBuffer(KTEXT("railgun.ogg"));
+	if (!railgunBuffer)
+		return false;
 
-	mp_footStepSound = new sf::Sound(*footstepBuffer);
-	mp_footStepSound->setLoop(true);
-	mp_footStepSound->setVolume(25);
-	mp_footStepSound->play();
+	if (!hitSound)
+		return false;
+	
+	if (!playerDie)
+		return false;
 
-	mp_railgunSound = new sf::Sound(*railgunBuffer);
-	mp_railgunSound->setLoop(false);
+	m_playerHitSound.setBuffer(*hitSound);
+	m_playerHitSound.setVolume(100);
+	m_footStepSound.setBuffer(*footstepBuffer);
+
+	m_railgunSound.setBuffer(*railgunBuffer);
+	m_railgunSound.setVolume(75);
+	m_railgunSound.setLoop(false);
 
 	return true;
 }
@@ -375,9 +402,7 @@ void PlayerController::handlePlayerShootingMechanics(const Vec2f& movVec)
 			m_bIsMoving = true;
 			if (m_playerState != PlayerState::StateRunning)
 			{
-				if (mp_footStepSound->getStatus() != sf::Sound::Playing)
-				{
-				}
+
 				changeState(PlayerState::StateRunning);
 			}
 		}
@@ -394,21 +419,19 @@ void PlayerController::handlePlayerShootingMechanics(const Vec2f& movVec)
 void PlayerController::checkInsideBounds(Vec2f & movVec)
 {
 	Vec2f centrePos = getGameObj()->getCentrePosition();
+	const float halfWidth = getGameObj()->getFixedGlobalBounds().width / 2.0f;
+	const float halfHeight = getGameObj()->getFixedGlobalBounds().height / 2.0f;
+
 	float dt = KApplication::getApp()->getDeltaTime();
-	sf::FloatRect playerbounds(getGameObj()->getFixedGlobalBounds());
-	playerbounds.left = centrePos.x - playerbounds.width / 2.0f;
-	playerbounds.top = centrePos.y - playerbounds.height / 2.0f;
+	centrePos += movVec * dt * PlayerMoveSpeed;
 
-	playerbounds.left += movVec.x * PlayerMoveSpeed * dt;
-	playerbounds.top += movVec.y * PlayerMoveSpeed * dt;
-
-	if (playerbounds.left + playerbounds.width > MAP_WIDTH || playerbounds.left < 0)
+	if (centrePos.x + halfWidth > MAP_WIDTH || centrePos.x - halfWidth < 0)
 	{
-		movVec.x = 0.0f;
+		movVec.x *= -1.0f;
 	}
 
-	if (playerbounds.top + playerbounds.height > MAP_HEIGHT || playerbounds.top < 0)
+	if (centrePos.y + halfHeight > MAP_HEIGHT || centrePos.y - halfHeight < 0)
 	{
-		movVec.y = 0.0f;
+		movVec.y *= -1.0f;
 	}
 }

@@ -14,7 +14,7 @@ Krawler::KInitStatus WinState::setupState(const KLogicStateInitialiser & initial
 
 	m_winText.setCharacterSize(48);
 	m_winText.setString(KTEXT("You have defeated \n the evil MoreBots!"));
-	m_winText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("res\\seriphim.ttf")));
+	m_winText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("seriphim.ttf")));
 	m_winText.setStyle(sf::Text::Underlined);
 
 	return Krawler::KInitStatus::Success;

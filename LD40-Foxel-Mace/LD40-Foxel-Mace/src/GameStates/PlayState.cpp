@@ -31,7 +31,7 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 	{
 		return result;
 	}
-	auto rAssetLoader = KAssetLoader::getAssetLoader();
+	auto& rAssetLoader = KAssetLoader::getAssetLoader();
 	rAssetLoader.setRootFolder(KTEXT("res/"));
 
 	auto pPlayer = addGameObject(Vec2f(CHARACTER_SIZE, CHARACTER_SIZE));
@@ -51,7 +51,7 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 	mp_playerMesh = new MeshCollider(points, pPlayer);
 	m_meshColliders.push_back(mp_playerMesh);
 
-	m_tiledMap.setTexture(KTEXT("res/bg.png"));
+	m_tiledMap.setTexture(KTEXT("bg.png"));
 	int* map = new int[MAP_WIDTH * MAP_HEIGHT];
 
 	for (int i = 0; i < MAP_WIDTH * MAP_HEIGHT; ++i)
@@ -60,6 +60,7 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 	}
 	m_tiledMap.setupTiledMapFromArray(map, Vec2i(MAP_WIDTH, MAP_HEIGHT), Vec2i(TILE_SIZE, TILE_SIZE));
 	m_tiledMap.setScale(2.0f, 2.0f);
+	m_tiledMap.setPosition(0.0f, 0.0f);
 	KFREE_ARR(map);
 
 	KApplication::getApp()->getRenderer()->setActiveTiledMap(&m_tiledMap);
@@ -70,7 +71,7 @@ KInitStatus PlayState::setupState(const KLogicStateInitialiser & initaliser)
 
 	mp_slAdmin->initAllUnits();
 	sf::Text m_toKillText;
-	m_toKillText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("res\\seriphim.ttf")));
+	m_toKillText.setFont(*KAssetLoader::getAssetLoader().loadFont(KTEXT("seriphim.ttf")));
 	m_toKillText.setCharacterSize(32u);
 	m_toKillText.setString(KTEXT("Amount to kill: ") + std::to_wstring(0));
 	Vec2i screenPos;
@@ -132,7 +133,7 @@ void PlayState::tick()
 
 void PlayState::registerLogicUnits()
 {
-	mp_slAdmin->addUnit(new Camera(*mp_slAdmin, mp_playerObj, Vec2f(MAP_WIDTH, MAP_HEIGHT) * 2.0f));
+	mp_slAdmin->addUnit(new Camera(*mp_slAdmin, mp_playerObj, Vec2f(MAP_WIDTH, MAP_HEIGHT)));
 	mp_slAdmin->addUnit(new WorldCollisions(m_meshColliders, *mp_slAdmin));
 	mp_slAdmin->addUnit(new PlayerController(mp_playerObj, *mp_slAdmin));
 
